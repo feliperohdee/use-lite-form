@@ -32,8 +32,8 @@ export default defineConfig(env => {
 			...config.plugins!,
 			dts({
 				exclude: ['./src/**/*.spec.tsx'],
-				include: ['./src/form/*', './src/index.ts'],
-				rollupTypes: true
+				include: ['./src/form/*', './src/index.ts']
+				// rollupTypes: true
 			})
 		];
 	}

@@ -11,7 +11,7 @@ import omit from 'lodash/omit';
 import set from 'lodash/set';
 import size from 'lodash/size';
 
-import type { Item } from '@/form/item';
+import { Item } from '@/form/item';
 
 namespace Instance {
 	export type Path = (string | number)[];
@@ -275,4 +275,5 @@ class Instance {
 	}
 }
 
+export { Instance };
 export default Instance;

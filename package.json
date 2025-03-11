@@ -40,7 +40,7 @@
 		"npm-publish": "yarn test --run && yarn build && yarn version --patch --no-git-tag-version && yarn publish --non-interactive",
 		"test": "vitest"
 	},
-	"version": "1.0.0",
+	"version": "1.0.4",
 	"dependencies": {
 		"clsx": "^2.1.1",
 		"lodash": "^4.17.21"

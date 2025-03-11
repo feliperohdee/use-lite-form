@@ -8,8 +8,8 @@ import reject from 'lodash/reject';
 import size from 'lodash/size';
 import { createContext, FC, Fragment, ReactNode, useCallback, useContext, useRef } from 'react';
 
-import type Instance from '@/form/instance';
 import context from '@/form/context';
+import Instance from '@/form/instance';
 import util from '@/form/util';
 
 namespace List {

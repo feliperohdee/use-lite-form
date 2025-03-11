@@ -1,6 +1,6 @@
 import { createContext } from 'react';
 
-import type Instance from '@/form/instance';
+import Instance from '@/form/instance';
 
 type Context = {
 	form: Instance;
