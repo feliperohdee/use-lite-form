@@ -1,0 +1,48 @@
+{
+	"name": "use-lite-form",
+	"devDependencies": {
+		"@eslint/js": "^9.19.0",
+		"@testing-library/dom": "^10.4.0",
+		"@testing-library/jest-dom": "^6.6.3",
+		"@testing-library/react": "^16.2.0",
+		"@types/lodash": "^4.17.16",
+		"@types/node": "^22.13.1",
+		"@types/react": "^19.0.8",
+		"@types/react-dom": "^19.0.3",
+		"@vitejs/plugin-react": "^4.3.4",
+		"eslint": "^9.19.0",
+		"eslint-plugin-react-hooks": "^5.0.0",
+		"eslint-plugin-react-refresh": "^0.4.18",
+		"globals": "^16.0.0",
+		"jsdom": "^26.0.0",
+		"prettier": "^3.4.2",
+		"react": "^19.0.0",
+		"react-dom": "^19.0.0",
+		"typescript": "~5.8.2",
+		"typescript-eslint": "^8.22.0",
+		"vite": "^6.2.0",
+		"vite-plugin-dts": "^4.5.3",
+		"vitest": "^3.0.7"
+	},
+	"files": [
+		"dist"
+	],
+	"main": "./dist/index.js",
+	"license": "MIT",
+	"peerDependencies": {
+		"react": "^19.0.0",
+		"react-dom": "^19.0.0"
+	},
+	"scripts": {
+		"build": "yarn lint && vite build --mode export",
+		"dev": "vite",
+		"lint": "prettier --write . && eslint .",
+		"npm-publish": "yarn test --run && yarn build && yarn version --patch --no-git-tag-version && yarn publish --non-interactive",
+		"test": "vitest"
+	},
+	"version": "1.0.0",
+	"dependencies": {
+		"clsx": "^2.1.1",
+		"lodash": "^4.17.21"
+	}
+}
