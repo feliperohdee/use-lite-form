@@ -1,4 +1,4 @@
-import { Component, forwardRef, ForwardedRef, ReactNode, useContext } from 'react';
+import { ReactNode, forwardRef, ForwardedRef, useCallback, useContext, useState, useEffect, useRef } from 'react';
 import debounce from 'lodash/debounce';
 import forEach from 'lodash/forEach';
 import isArray from 'lodash/isArray';
@@ -30,9 +30,7 @@ namespace Item {
 		effect?: (value: Instance.Value) => void;
 		emptyValue?: Instance.Value;
 		file?: boolean;
-		form?: Instance;
 		id?: string;
-		locked?: boolean;
 		onChangeProperty?: string;
 		path: Instance.Path;
 		required?:
@@ -49,266 +47,291 @@ namespace Item {
 
 	export type State = {
 		error: Instance.Errors | Instance.Error | Instance.Error[];
-		id: string;
 		value: Instance.Value;
 	};
 }
 
-class Item extends Component<Item.Props, Item.State> {
-	static defaultProps: Partial<Item.Props> = {
-		debounce: 250,
-		defaultValue: '',
-		emptyValue: '',
-		onChangeProperty: 'onChange',
-		valueProperty: 'value'
-	};
+let itemIndex = 0;
 
-	private static index: number = 0;
-	private commit: boolean = false;
-	// @ts-expect-error
-	private reportFormDelayed: (() => void) & { cancel?: () => void };
+const trimString = (value: string): string => {
+	if (isString(value)) {
+		return trim(value);
+	}
+	return value;
+};
 
-	constructor(props: Item.Props) {
-		super(props);
-
-		const { defaultValue, form, path } = props;
+const Item = forwardRef(
+	(
+		{
+			children,
+			debounce: debounceTime = 250,
+			defaultValue = '',
+			effect,
+			emptyValue = '',
+			file,
+			id: propId,
+			onChangeProperty = 'onChange',
+			path: propPath,
+			required: propRequired,
+			transform,
+			transformIn,
+			transformOut,
+			valueGetter,
+			valueProperty = 'value'
+		}: Item.Props,
+		ref: ForwardedRef<unknown>
+	) => {
+		const { form, locked } = useContext(context);
 
 		if (isUndefined(form)) {
-			throw new Error(`"Form.Item" must be wrapped by a "Form".`);
+			throw new Error(`"Form.Item" must be used within a "Form" component.`);
 		}
 
-		if (!isArray(path)) {
+		if (!isArray(propPath)) {
 			throw new Error(`"path" is required.`);
 		}
 
-		const value = form.get(path, defaultValue);
+		const transformInValue = useRef((value: Instance.Value): Instance.Value => {
+			if (isFunction(transformIn)) {
+				const newValue = transformIn(value);
 
-		this.state = {
-			error: form.getError(path),
-			id: props.id || '',
-			value: this.transformIn(value)
-		};
-	}
-
-	cancelReportFormDelayed(): void {
-		if (!isFunction(this.reportFormDelayed.cancel)) {
-			return;
-		}
-
-		this.reportFormDelayed.cancel();
-	}
-
-	componentDidMount(): void {
-		const { debounce: debounceTime, form, id } = this.props;
-
-		if (debounceTime && debounceTime > 0) {
-			this.reportFormDelayed = debounce(this.reportForm, debounceTime);
-		} else {
-			this.reportFormDelayed = this.reportForm;
-		}
-
-		form!.registerItem(this);
-
-		if (!id) {
-			this.setState({ id: `form-item-${Item.index++}` });
-		}
-	}
-
-	componentWillUnmount(): void {
-		const { form } = this.props;
-
-		form!.unregisterItem(this);
-	}
-
-	componentDidUpdate(): void {
-		const { form, path, defaultValue } = this.props;
-		const error = form!.getError(path);
-
-		if (this.commit) {
-			if (!isEqual(error, this.state.error)) {
-				this.setState({ error });
+				if (!isUndefined(newValue)) {
+					return newValue;
+				}
 			}
-		} else {
-			const value = this.transformIn(form!.get(path, defaultValue));
 
-			if (!isEqual(error, this.state.error) || !isEqual(value, this.state.value)) {
-				this.setState({ error, value });
+			return value;
+		});
+
+		const transformOutValue = useRef((value: Instance.Value): Instance.Value => {
+			if (isFunction(transformOut)) {
+				const newValue = transformOut(value, {
+					form: form,
+					oldValue: form.get(path.current, defaultValue),
+					path: path.current
+				});
+
+				if (!isUndefined(newValue)) {
+					return newValue;
+				}
 			}
-		}
-	}
 
-	onChange(value: Instance.Value | React.ChangeEvent): void {
-		const { file, locked, valueProperty } = this.props;
+			return value;
+		});
 
-		if (locked) {
-			return;
-		}
+		const transformValue = useRef((value: Instance.Value): Instance.Value => {
+			if (isFunction(transform)) {
+				const newValue = transform(value);
 
-		value = this.valueGetter(value);
-
-		if (value && value.target instanceof EventTarget && !isUndefined(value.target)) {
-			if (file && !isUndefined(value.target.files)) {
-				value = value.target.files;
-			} else if (!isUndefined(value.target[valueProperty!])) {
-				value = value.target[valueProperty!];
+				if (!isUndefined(newValue)) {
+					return newValue;
+				}
 			}
-		}
 
-		this.commit = true;
-		this.cancelReportFormDelayed();
-		this.setState({ value }, this.reportFormDelayed);
-	}
+			return value;
+		});
 
-	render(): ReactNode {
-		const { children, file, onChangeProperty, valueProperty } = this.props;
-		const { error, id, value } = this.state;
-		const childrenProps: any = {
-			'data-error': error,
-			'data-id': id,
-			[onChangeProperty!]: this.onChange.bind(this),
-			[valueProperty!]: file ? undefined : this.transform(value)
-		};
+		const getValueFromEvent = useRef((value: Instance.Value | React.ChangeEvent): Instance.Value => {
+			if (isFunction(valueGetter)) {
+				const newValue = valueGetter(value);
 
-		return util.renderChildren(children, childrenProps, { error, id });
-	}
+				if (!isUndefined(newValue)) {
+					return newValue;
+				}
+			}
 
-	reportForm(): void {
-		const { effect, emptyValue, form, path, required } = this.props;
-		const { value } = this.state;
+			return value;
+		});
 
-		const transformed = this.transformOut(value);
+		const id = useRef(propId || `form-item-${itemIndex++}`);
+		const item = useRef<Instance.RegisteredItem>(null);
+		const path = useRef(propPath);
+		const reportFormDelayed = useRef<(() => void) & { cancel?: () => void }>(null);
+		const required = useRef(propRequired);
+		const userInputPending = useRef(false);
 
-		if (isFunction(effect)) {
-			effect(transformed);
-		}
+		const state = useRef<Item.State>({
+			error: form.getError(path.current),
+			value: transformInValue.current(form.get(path.current, defaultValue))
+		});
 
-		form!.set(path, transformed, false);
-		this.commit = false;
+		const [uiState, setUiState] = useState<Item.State>(state.current);
+		const reportForm = useRef(() => {
+			const transformed = transformOutValue.current(state.current.value);
 
-		if (required) {
-			if (isFunction(required)) {
-				const requiredError = required({ value: this.trimString(value) });
+			if (isFunction(effect)) {
+				effect(transformed);
+			}
 
-				if (requiredError) {
-					if (isArray(requiredError)) {
-						forEach(requiredError, ({ path, error }) => {
-							if (isArray(path)) {
-								if (error) {
-									form!.setError(path, isString(error) ? error : 'Required Field.', false, true);
-								} else {
-									form!.unsetError(path);
+			form.set(path.current, transformed, false);
+			userInputPending.current = false;
+
+			if (required.current) {
+				if (isFunction(required.current)) {
+					const requiredError = required.current({ value: trimString(state.current.value) });
+
+					if (requiredError) {
+						if (isArray(requiredError)) {
+							forEach(requiredError, ({ path, error }) => {
+								if (isArray(path)) {
+									if (error) {
+										form.setError(path, isString(error) ? error : 'Required Field.', false, true);
+									} else {
+										form.unsetError(path);
+									}
 								}
+							});
+							return;
+						} else if (isObject(requiredError) && isArray(requiredError.path)) {
+							if (requiredError.error) {
+								form.setError(requiredError.path, isString(requiredError.error) ? requiredError.error : 'Required Field.', false, true);
+							} else {
+								form.unsetError(requiredError.path);
 							}
-						});
-						return;
-					} else if (isObject(requiredError) && isArray(requiredError.path)) {
-						if (requiredError.error) {
-							form!.setError(requiredError.path, isString(requiredError.error) ? requiredError.error : 'Required Field.', false, true);
-						} else {
-							form!.unsetError(requiredError.path);
+							return;
 						}
 
+						form.setError(path.current, isString(requiredError) ? requiredError : 'Required Field.', false, true);
 						return;
 					}
-
-					form!.setError(path, isString(requiredError) ? requiredError : 'Required Field.', false, true);
+				} else if (trimString(state.current.value) === emptyValue) {
+					form.setError(path.current, 'Required Field.', false, true);
 					return;
 				}
-			} else if (this.trimString(value) === emptyValue) {
-				form!.setError(path, 'Required Field.', false, true);
-				return;
 			}
-		}
 
-		form!.unsetError(path);
-	}
+			form.unsetError(path.current);
+		});
 
-	reportFormImmediate(): void {
-		this.cancelReportFormDelayed();
-		this.reportForm();
-	}
-
-	transform(value: Instance.Value): Instance.Value {
-		const { transform } = this.props;
-
-		if (isFunction(transform)) {
-			const newValue = transform(value);
-
-			if (!isUndefined(newValue)) {
-				return newValue;
+		// effect to setup form, runs once
+		useEffect(() => {
+			if (debounceTime && debounceTime > 0) {
+				reportFormDelayed.current = debounce(reportForm.current, debounceTime);
+			} else {
+				reportFormDelayed.current = reportForm.current;
 			}
-		}
 
-		return value;
-	}
+			if (!item.current) {
+				item.current = {
+					id: id.current,
+					reportFormImmediate: () => {
+						if (reportFormDelayed.current?.cancel) {
+							reportFormDelayed.current.cancel();
+						}
 
-	trimString(value: string): string {
-		if (isString(value)) {
-			return trim(value);
-		}
-
-		return value;
-	}
-
-	transformIn(value: Instance.Value): Instance.Value {
-		const { transformIn } = this.props;
-
-		if (isFunction(transformIn)) {
-			const newValue = transformIn(value);
-
-			if (!isUndefined(newValue)) {
-				return newValue;
+						reportForm.current();
+					}
+				};
 			}
-		}
 
-		return value;
-	}
+			form.registerItem(item.current);
 
-	transformOut(value: Instance.Value): Instance.Value {
-		const { defaultValue, form, path, transformOut } = this.props;
+			return () => {
+				if (reportFormDelayed.current?.cancel) {
+					reportFormDelayed.current.cancel();
+				}
 
-		if (isFunction(transformOut)) {
-			const newValue = transformOut(value, {
-				form: form!,
-				oldValue: form!.get(path, defaultValue),
-				path
-			});
+				if (item.current) {
+					form.unregisterItem(item.current);
+				}
+			};
+		}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-			if (!isUndefined(newValue)) {
-				return newValue;
+		useEffect(() => {
+			const error = form.getError(path.current);
+
+			// when user input is pending, we just update the error
+			if (userInputPending.current) {
+				if (!isEqual(error, state.current.error)) {
+					state.current.error = error;
+					setUiState(state => {
+						return {
+							...state,
+							error
+						};
+					});
+				}
+			} else {
+				// when user input is not pending, we update the error and value
+				const value = transformInValue.current(form.get(path.current, defaultValue));
+
+				if (!isEqual(error, state.current.error) || !isEqual(value, state.current.value)) {
+					state.current.error = error;
+					state.current.value = value;
+
+					setUiState(state => {
+						return {
+							...state,
+							error,
+							value
+						};
+					});
+				}
 			}
-		}
+		}, [form, path, defaultValue]);
 
-		return value;
+		// update path
+		useEffect(() => {
+			path.current = propPath;
+		}, [propPath]);
+
+		// update required
+		useEffect(() => {
+			required.current = propRequired;
+		}, [propRequired]);
+
+		const handleChange = useCallback(
+			(value: Instance.Value | React.ChangeEvent) => {
+				if (locked) {
+					return;
+				}
+
+				value = getValueFromEvent.current(value);
+
+				if (value && value.target instanceof EventTarget && !isUndefined(value.target)) {
+					if (file && !isUndefined(value.target.files)) {
+						value = value.target.files;
+					} else if (!isUndefined(value.target[valueProperty])) {
+						value = value.target[valueProperty];
+					}
+				}
+
+				userInputPending.current = true;
+
+				if (reportFormDelayed.current?.cancel) {
+					reportFormDelayed.current.cancel();
+				}
+
+				state.current.value = value;
+				setUiState(state => {
+					return {
+						...state,
+						value
+					};
+				});
+
+				if (reportFormDelayed.current) {
+					reportFormDelayed.current();
+				}
+			},
+			[locked, file, valueProperty]
+		);
+
+		const childrenProps = {
+			'data-error': uiState.error,
+			'data-id': id.current,
+			[onChangeProperty]: handleChange,
+			[valueProperty]: file ? null : transformValue.current(uiState.value),
+			ref
+		};
+
+		return util.renderChildren(children, childrenProps, {
+			error: uiState.error,
+			id: id.current,
+			onChange: handleChange,
+			value: uiState.value
+		});
 	}
+);
 
-	valueGetter(value: Instance.Value | React.ChangeEvent): Instance.Value {
-		const { valueGetter } = this.props;
-
-		if (isFunction(valueGetter)) {
-			const newValue = valueGetter(value);
-
-			if (!isUndefined(newValue)) {
-				return newValue;
-			}
-		}
-
-		return value;
-	}
-}
-
-const ForwardedItem = forwardRef((props: Item.Props, ref: ForwardedRef<Item>) => {
-	const { form, locked } = useContext(context);
-
-	return (
-		<Item
-			{...props}
-			form={form}
-			locked={locked}
-			ref={ref}
-		/>
-	);
-});
-
-export { Item };
-export default ForwardedItem;
+export default Item;

@@ -1,30 +1,86 @@
 import cloneDeep from 'lodash/cloneDeep';
 import debounce from 'lodash/debounce';
+import forEach from 'lodash/forEach';
 import get from 'lodash/get';
 import isArray from 'lodash/isArray';
 import isEmpty from 'lodash/isEmpty';
 import isFunction from 'lodash/isFunction';
+import isNil from 'lodash/isNil';
+import isObject from 'lodash/isObject';
+import isPlainObject from 'lodash/isPlainObject';
 import isString from 'lodash/isString';
 import isUndefined from 'lodash/isUndefined';
 import now from 'lodash/now';
-import omit from 'lodash/omit';
+import omitBy from 'lodash/omitBy';
 import set from 'lodash/set';
 import size from 'lodash/size';
 
-import { Item } from '@/form/item';
+const deepClean = (obj: any): any => {
+	// avoid mutating the original object
+	const clone = cloneDeep(obj);
+
+	// Handle null/undefined input
+	if (isNil(clone)) {
+		return clone;
+	}
+
+	// Process arrays
+	if (isArray(clone)) {
+		// First clean each array item recursively
+		const processed = clone
+			.map(item => {
+				return isObject(item) ? deepClean(item) : item;
+			})
+			// Then filter out null/undefined values
+			.filter(item => {
+				return !isNil(item);
+			});
+
+		// Return null if array is empty after processing
+		return size(processed) > 0 ? processed : null;
+	}
+
+	// Process objects
+	if (isPlainObject(clone)) {
+		// Process each property recursively
+		forEach(clone, (value, key) => {
+			if (isObject(value)) {
+				clone[key] = deepClean(value);
+
+				// If the result is null after processing, delete the property
+				if (isNil(clone[key])) {
+					delete clone[key];
+				}
+			}
+		});
+
+		// Use omitBy to remove all null/undefined values
+		const result = omitBy(clone, isNil);
+
+		// Return null if object is empty after processing
+		return !isEmpty(result) ? result : null;
+	}
+
+	// Return primitive values as is
+	return clone;
+};
 
 namespace Instance {
-	export type Path = (string | number)[];
-	export type Value = any;
-
 	export type Error = string | null;
 	export type Errors = {
 		[key: string]: Errors | Error | Error[];
 	};
 
+	export type Path = (string | number)[];
+	export type RegisteredItem = {
+		id: string;
+		reportFormImmediate: () => void;
+	};
+
 	export type Listener = {
 		(data: { errors: Errors; value: Instance.Value }, silent: boolean): void;
 	};
+	export type Value = any;
 }
 
 class RequiredErrors extends Set<string> {
@@ -69,7 +125,7 @@ class Instance {
 		get: { [key: string]: Instance.Value };
 	};
 
-	private items: Set<Item>;
+	private items: Set<Instance.RegisteredItem>;
 	private onChangeListeners: Set<Instance.Listener>;
 
 	public errors: Instance.Errors;
@@ -181,7 +237,7 @@ class Instance {
 		this.triggerOnChange({ silent });
 	}
 
-	registerItem(item: Item): void {
+	registerItem(item: Instance.RegisteredItem): void {
 		this.items.add(item);
 	}
 
@@ -252,12 +308,12 @@ class Instance {
 		});
 	}, 10);
 
-	unregisterItem(item: Item): void {
+	unregisterItem(item: Instance.RegisteredItem): void {
 		this.items.delete(item);
 	}
 
 	unsetError(path: Instance.Path, silent: boolean = false): Instance.Errors {
-		this.errors = omit(this.errors, path.join('.'));
+		this.errors = deepClean(set(this.errors, path, null)) || {};
 		this.requiredErrors.delete(path);
 		this.triggerOnChange({ silent });
 
@@ -275,5 +331,5 @@ class Instance {
 	}
 }
 
-export { Instance };
+export { Instance, deepClean };
 export default Instance;

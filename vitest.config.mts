@@ -11,6 +11,9 @@ const viteConfig = defineConfig(() => {
 			}
 		},
 		test: {
+			coverage: {
+				include: ['src/form/**/*.ts', 'src/form/**/*.tsx']
+			},
 			environment: 'jsdom',
 			include: ['**/*.spec.*'],
 			setupFiles: [path.resolve('vitest.setup.ts')]

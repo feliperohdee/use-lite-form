@@ -55,9 +55,18 @@ namespace Form {
 	}
 }
 
-const Form = (props: Form.Props) => {
-	const { as = 'form', className, children, form: propForm, implicit = false, locked = false, onChange, value: propValue, ...rest } = props;
-
+const Form = ({
+	as = 'form',
+	className,
+	children,
+	form: propForm,
+	implicit = false,
+	locked = false,
+	onChange,
+	onSubmit,
+	value: propValue,
+	...rest
+}: Form.Props) => {
 	const formInstance = useRef(
 		(() => {
 			if (propForm && !isUndefined(propValue)) {
@@ -71,7 +80,7 @@ const Form = (props: Form.Props) => {
 	const [state, setState] = useState({
 		contextValue: {
 			form: formInstance.current,
-			locked: locked
+			locked
 		},
 		errors: formInstance.current.errors,
 		value: formInstance.current.value
@@ -90,9 +99,16 @@ const Form = (props: Form.Props) => {
 
 	// Form change handler
 	const handleChange = useCallback(
-		(data: { errors: Instance.Errors; value: Instance.Value }, silent = false) => {
-			const { errors, value } = data;
-
+		(
+			{
+				errors,
+				value
+			}: {
+				errors: Instance.Errors;
+				value: Instance.Value;
+			},
+			silent = false
+		) => {
 			// force context consumers to update
 			setState(prevState => ({
 				contextValue: {
@@ -128,10 +144,10 @@ const Form = (props: Form.Props) => {
 				e.preventDefault();
 			}
 
-			if (isFunction(props.onSubmit)) {
+			if (isFunction(onSubmit)) {
 				formInstance.current.requestImmediateValue();
 
-				props.onSubmit({
+				onSubmit({
 					errors: formInstance.current.errors,
 					errorsCount: formInstance.current.errorsCount(),
 					form: formInstance.current,
@@ -140,7 +156,7 @@ const Form = (props: Form.Props) => {
 				});
 			}
 		},
-		[props]
+		[onSubmit]
 	);
 
 	// Handle emulated submit (Enter key in input)

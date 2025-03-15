@@ -1,3 +1,4 @@
+import { createContext, Fragment, ReactNode, useCallback, useContext, useRef } from 'react';
 import filter from 'lodash/filter';
 import isFunction from 'lodash/isFunction';
 import isPlainObject from 'lodash/isPlainObject';
@@ -6,7 +7,6 @@ import map from 'lodash/map';
 import nth from 'lodash/nth';
 import reject from 'lodash/reject';
 import size from 'lodash/size';
-import { createContext, FC, Fragment, ReactNode, useCallback, useContext, useRef } from 'react';
 
 import context from '@/form/context';
 import Instance from '@/form/instance';
@@ -109,10 +109,7 @@ const move = <T extends Instance.Value[]>(array: T, moveIndex: number, toIndex: 
 	return array;
 };
 
-const List: FC<List.Props> & {
-	Items: FC<List.ItemsProps>;
-	Add: FC<ListAddProps>;
-} = ({
+const List = ({
 	children,
 	getId = (value, key) => {
 		return `item-${key}`;
@@ -120,7 +117,7 @@ const List: FC<List.Props> & {
 	min = 0,
 	max = Infinity,
 	path
-}) => {
+}: List.Props) => {
 	const { form } = useContext(context);
 	const keyManager = useRef({ keys: [] as number[], id: 0 });
 
@@ -210,12 +207,7 @@ const List: FC<List.Props> & {
 			const items = form.get(path, []) as Instance.Value[];
 
 			form.requiredErrors.delete([...path, index]);
-			form.setError(
-				path,
-				reject(form.getError(path) as Instance.Error[], (_, index_) => {
-					return index === index_;
-				})
-			);
+			form.unsetError([...path, index]);
 
 			keyManager.current.keys = reject(keyManager.current.keys, (_, index_) => {
 				return index === index_;
@@ -231,7 +223,7 @@ const List: FC<List.Props> & {
 		[form, path]
 	);
 
-	const items = map(form.get(path, []) as Instance.Value[], (value, index) => ({
+	const items = map(form.get(path, []), (value, index) => ({
 		index,
 		value
 	}));
@@ -279,6 +271,7 @@ const List: FC<List.Props> & {
 					if (!canAdd) {
 						return;
 					}
+
 					return handleAdd(value, index);
 				},
 				canAdd,
@@ -290,7 +283,7 @@ const List: FC<List.Props> & {
 	);
 };
 
-const ListItems: FC<List.ItemsProps> = ({ children, filter: filterFn }) => {
+const ListItems = ({ children, filter: filterFn }: List.ItemsProps) => {
 	let { form } = useContext(context);
 	let {
 		canAdd,
@@ -437,7 +430,7 @@ type ListAddProps = {
 	children: ReactNode | ListAddRenderFunction;
 };
 
-const ListAdd: FC<ListAddProps> = ({ children }) => {
+const ListAdd = ({ children }: ListAddProps) => {
 	const { canAdd, getValue, handleAdd, replace, size } = useContext(listContext);
 
 	return util.renderChildren(children, {

@@ -1,5 +1,6 @@
 *.lock
 *.tsbuildinfo
+coverage
 dist
 node_modules
 

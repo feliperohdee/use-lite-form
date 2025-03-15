@@ -240,10 +240,8 @@ describe('/form', () => {
 
 			fireEvent.click(screen.getByTestId('submit'));
 			expect(onSubmit).toHaveBeenCalledWith({
-				errors: {
-					items: []
-				},
-				errorsCount: 1,
+				errors: {},
+				errorsCount: 0,
 				form: expect.any(Form.Instance),
 				requiredErrorsCount: 0,
 				value: {
