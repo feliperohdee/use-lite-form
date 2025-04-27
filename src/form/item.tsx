@@ -27,7 +27,7 @@ namespace Item {
 		children: ReactNode | RenderFunction;
 		debounce?: number;
 		defaultValue?: Instance.Value;
-		effect?: (value: Instance.Value) => void;
+		effect?: (input: { form: Instance; oldValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => void;
 		emptyValue?: Instance.Value;
 		file?: boolean;
 		id?: string;
@@ -38,9 +38,9 @@ namespace Item {
 			| ((data: {
 					value: Instance.Value;
 			  }) => string | boolean | { path: Instance.Path; error: string | boolean }[] | { path: Instance.Path; error: string | boolean });
-		transform?: (value: Instance.Value) => Instance.Value;
-		transformIn?: (value: Instance.Value) => Instance.Value;
-		transformOut?: (value: Instance.Value, context: { form: Instance; oldValue: Instance.Value; path: Instance.Path }) => Instance.Value;
+		transform?: (input: { form: Instance; oldValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => Instance.Value;
+		transformIn?: (input: { form: Instance; oldValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => Instance.Value;
+		transformOut?: (input: { form: Instance; oldValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => Instance.Value;
 		valueGetter?: (value: Instance.Value | React.ChangeEvent) => Instance.Value;
 		valueProperty?: string;
 	};
@@ -91,24 +91,26 @@ const Item = forwardRef(
 			throw new Error(`"path" is required.`);
 		}
 
-		const transformInValue = useRef((value: Instance.Value): Instance.Value => {
-			if (isFunction(transformIn)) {
-				const newValue = transformIn(value);
-
-				if (!isUndefined(newValue)) {
-					return newValue;
-				}
+		const effectRef = useRef((value: Instance.Value) => {
+			if (isFunction(effect)) {
+				effect({
+					form,
+					oldValue: form.get(path.current, defaultValue),
+					path: path.current,
+					value
+				});
 			}
-
-			return value;
 		});
 
-		const transformOutValue = useRef((value: Instance.Value): Instance.Value => {
-			if (isFunction(transformOut)) {
-				const newValue = transformOut(value, {
-					form: form,
+		const transformInRef = useRef((): Instance.Value => {
+			const value = form.get(path.current, defaultValue);
+
+			if (isFunction(transformIn)) {
+				const newValue = transformIn({
+					form,
 					oldValue: form.get(path.current, defaultValue),
-					path: path.current
+					path: path.current,
+					value
 				});
 
 				if (!isUndefined(newValue)) {
@@ -119,9 +121,32 @@ const Item = forwardRef(
 			return value;
 		});
 
-		const transformValue = useRef((value: Instance.Value): Instance.Value => {
+		const transformOutRef = useRef((value: Instance.Value): Instance.Value => {
+			if (isFunction(transformOut)) {
+				const oldValue = form.get(path.current, defaultValue);
+				const newValue = transformOut({
+					form,
+					oldValue,
+					path: path.current,
+					value
+				});
+
+				if (!isUndefined(newValue)) {
+					return newValue;
+				}
+			}
+
+			return value;
+		});
+
+		const transformRef = useRef((value: Instance.Value): Instance.Value => {
 			if (isFunction(transform)) {
-				const newValue = transform(value);
+				const newValue = transform({
+					form,
+					oldValue: form.get(path.current, defaultValue),
+					path: path.current,
+					value
+				});
 
 				if (!isUndefined(newValue)) {
 					return newValue;
@@ -150,17 +175,17 @@ const Item = forwardRef(
 		const required = useRef(propRequired);
 		const userInputPending = useRef(false);
 
-		const state = useRef<Item.State>({
+		const stateRef = useRef<Item.State>({
 			error: form.getError(path.current),
-			value: transformInValue.current(form.get(path.current, defaultValue))
+			value: transformInRef.current()
 		});
 
-		const [uiState, setUiState] = useState<Item.State>(state.current);
+		const [state, setState] = useState<Item.State>(stateRef.current);
 		const reportForm = useRef(() => {
-			const transformed = transformOutValue.current(state.current.value);
+			const transformed = transformOutRef.current(stateRef.current.value);
 
 			if (isFunction(effect)) {
-				effect(transformed);
+				effectRef.current(transformed);
 			}
 
 			form.set(path.current, transformed, false);
@@ -168,7 +193,7 @@ const Item = forwardRef(
 
 			if (required.current) {
 				if (isFunction(required.current)) {
-					const requiredError = required.current({ value: trimString(state.current.value) });
+					const requiredError = required.current({ value: trimString(stateRef.current.value) });
 
 					if (requiredError) {
 						if (isArray(requiredError)) {
@@ -194,7 +219,7 @@ const Item = forwardRef(
 						form.setError(path.current, isString(requiredError) ? requiredError : 'Required Field.', false, true);
 						return;
 					}
-				} else if (trimString(state.current.value) === emptyValue) {
+				} else if (trimString(stateRef.current.value) === emptyValue) {
 					form.setError(path.current, 'Required Field.', false, true);
 					return;
 				}
@@ -242,9 +267,9 @@ const Item = forwardRef(
 
 			// when user input is pending, we just update the error
 			if (userInputPending.current) {
-				if (!isEqual(error, state.current.error)) {
-					state.current.error = error;
-					setUiState(state => {
+				if (!isEqual(error, stateRef.current.error)) {
+					stateRef.current.error = error;
+					setState(state => {
 						return {
 							...state,
 							error
@@ -253,13 +278,13 @@ const Item = forwardRef(
 				}
 			} else {
 				// when user input is not pending, we update the error and value
-				const value = transformInValue.current(form.get(path.current, defaultValue));
+				const value = transformInRef.current();
 
-				if (!isEqual(error, state.current.error) || !isEqual(value, state.current.value)) {
-					state.current.error = error;
-					state.current.value = value;
+				if (!isEqual(error, stateRef.current.error) || !isEqual(value, stateRef.current.value)) {
+					stateRef.current.error = error;
+					stateRef.current.value = value;
 
-					setUiState(state => {
+					setState(state => {
 						return {
 							...state,
 							error,
@@ -302,8 +327,8 @@ const Item = forwardRef(
 					reportFormDelayed.current.cancel();
 				}
 
-				state.current.value = value;
-				setUiState(state => {
+				stateRef.current.value = value;
+				setState(state => {
 					return {
 						...state,
 						value
@@ -318,18 +343,18 @@ const Item = forwardRef(
 		);
 
 		const childrenProps = {
-			'data-error': uiState.error,
+			'data-error': state.error,
 			'data-id': id.current,
 			[onChangeProperty]: handleChange,
-			[valueProperty]: file ? null : transformValue.current(uiState.value),
+			[valueProperty]: file ? null : transformRef.current(state.value),
 			ref
 		};
 
 		return util.renderChildren(children, childrenProps, {
-			error: uiState.error,
+			error: state.error,
 			id: id.current,
 			onChange: handleChange,
-			value: uiState.value
+			value: state.value
 		});
 	}
 );

@@ -8,7 +8,7 @@ type UseFormResult<T = any> = {
 	value: T;
 };
 
-const useForm = <T = any>(path?: string[]): UseFormResult<T> => {
+const useForm = <T = any>(path?: Instance.Path): UseFormResult<T> => {
 	const { form } = useContext(FormContext);
 
 	if (!form) {

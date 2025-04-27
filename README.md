@@ -210,8 +210,8 @@ const MyComponent = () => {
 <Form.Item
 	path={['tags']}
 	defaultValue={[]}
-	transformIn={value => (Array.isArray(value) ? value.join(', ') : '')}
-	transformOut={value =>
+	transformIn={({ value }) => (Array.isArray(value) ? value.join(', ') : '')}
+	transformOut={({ value }) =>
 		value
 			.split(',')
 			.map(tag => tag.trim())

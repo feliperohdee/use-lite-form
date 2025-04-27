@@ -531,7 +531,7 @@ const AdvancedForm = () => {
 						<Form.Item
 							path={['fullName']}
 							required
-							transformOut={value => value.trim()}
+							transformOut={({ value }) => value.trim()}
 						>
 							<input
 								type='text'
@@ -546,8 +546,8 @@ const AdvancedForm = () => {
 							path={['price']}
 							defaultValue=''
 							required
-							transformIn={value => (value ? parseFloat(value).toFixed(2) : '')}
-							transformOut={value => (value ? parseFloat(value) : 0)}
+							transformIn={({ value }) => (value ? parseFloat(value).toFixed(2) : '')}
+							transformOut={({ value }) => (value ? parseFloat(value) : 0)}
 						>
 							<input
 								type='text'
@@ -561,8 +561,8 @@ const AdvancedForm = () => {
 						<Form.Item
 							path={['tags']}
 							defaultValue={[]}
-							transformIn={value => (Array.isArray(value) ? value.join(', ') : '')}
-							transformOut={value =>
+							transformIn={({ value }) => (Array.isArray(value) ? value.join(', ') : '')}
+							transformOut={({ value }) =>
 								value
 									.split(',')
 									.map((tag: string) => tag.trim())
@@ -581,7 +581,7 @@ const AdvancedForm = () => {
 						<label className='form-label'>Date of Birth</label>
 						<Form.Item
 							path={['dob']}
-							transformOut={value => {
+							transformOut={({ value }) => {
 								try {
 									return new Date(value).toISOString().split('T')[0];
 								} catch {
