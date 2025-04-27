@@ -403,7 +403,7 @@ describe('/form', () => {
 
 			expect(transformIn).toHaveBeenCalledWith({
 				form: expect.any(Form.Instance),
-				oldValue: '25',
+				prevValue: '25',
 				value: '25',
 				path: ['age']
 			});
@@ -443,7 +443,7 @@ describe('/form', () => {
 
 			expect(transformOut).toHaveBeenCalledWith({
 				form: expect.any(Form.Instance),
-				oldValue: '',
+				prevValue: '',
 				value: 30,
 				path: ['age']
 			});
@@ -466,7 +466,7 @@ describe('/form', () => {
 
 			expect(transform).toHaveBeenCalledWith({
 				form: expect.any(Form.Instance),
-				oldValue: 1000,
+				prevValue: 1000,
 				value: 1000,
 				path: ['price']
 			});
@@ -493,7 +493,7 @@ describe('/form', () => {
 
 			expect(effect).toHaveBeenCalledWith({
 				form: expect.any(Form.Instance),
-				oldValue: '',
+				prevValue: '',
 				value: 'New Value',
 				path: ['name']
 			});
@@ -538,13 +538,13 @@ describe('/form', () => {
 
 			expect(transformIn).toHaveBeenCalledWith({
 				form: expect.any(Form.Instance),
-				oldValue: '99.99',
+				prevValue: '99.99',
 				value: '99.99',
 				path: ['price']
 			});
 			expect(transform).toHaveBeenCalledWith({
 				form: expect.any(Form.Instance),
-				oldValue: '99.99',
+				prevValue: '99.99',
 				value: 99.99,
 				path: ['price']
 			});
@@ -558,13 +558,13 @@ describe('/form', () => {
 
 			expect(transformOut).toHaveBeenCalledWith({
 				form: expect.any(Form.Instance),
-				oldValue: '99.99',
+				prevValue: '99.99',
 				value: 199.99,
 				path: ['price']
 			});
 			expect(effect).toHaveBeenCalledWith({
 				form: expect.any(Form.Instance),
-				oldValue: '99.99',
+				prevValue: '99.99',
 				value: '199.99',
 				path: ['price']
 			});
@@ -589,13 +589,13 @@ describe('/form', () => {
 
 			expect(transformIn).toHaveBeenCalledWith({
 				form: expect.any(Form.Instance),
-				oldValue: '750',
+				prevValue: '750',
 				value: '750',
 				path: ['user', 'stats', 'score']
 			});
 			expect(transform).toHaveBeenCalledWith({
 				form: expect.any(Form.Instance),
-				oldValue: '750',
+				prevValue: '750',
 				value: 750,
 				path: ['user', 'stats', 'score']
 			});
@@ -635,7 +635,7 @@ describe('/form', () => {
 
 			expect(effect).toHaveBeenCalledWith({
 				form: expect.any(Form.Instance),
-				oldValue: '',
+				prevValue: '',
 				value: 'admin',
 				path: ['user', 'role']
 			});
@@ -677,13 +677,13 @@ describe('/form', () => {
 
 			expect(transformIn).toHaveBeenCalledWith({
 				form: expect.any(Form.Instance),
-				oldValue: 10,
+				prevValue: 10,
 				value: 10,
 				path: ['count']
 			});
 			expect(transform).toHaveBeenCalledWith({
 				form: expect.any(Form.Instance),
-				oldValue: 10,
+				prevValue: 10,
 				value: 10,
 				path: ['count']
 			});
@@ -699,7 +699,7 @@ describe('/form', () => {
 
 			expect(transformOut).toHaveBeenCalledWith({
 				form: expect.any(Form.Instance),
-				oldValue: 10,
+				prevValue: 10,
 				value: 20,
 				path: ['count']
 			});
@@ -766,13 +766,13 @@ describe('/form', () => {
 
 			expect(transform).toHaveBeenCalledWith({
 				form: expect.any(Form.Instance),
-				oldValue: 'admin',
+				prevValue: 'admin',
 				value: 'Admin',
 				path: ['user', 'role']
 			});
 			expect(transform).toHaveBeenCalledWith({
 				form: expect.any(Form.Instance),
-				oldValue: 'admin',
+				prevValue: 'admin',
 				path: ['user', 'role'],
 				value: 'Admin'
 			});
@@ -787,7 +787,7 @@ describe('/form', () => {
 
 			expect(transformOut).toHaveBeenCalledWith({
 				form: expect.any(Form.Instance),
-				oldValue: 'admin',
+				prevValue: 'admin',
 				value: 'Regular User',
 				path: ['user', 'role']
 			});
@@ -822,7 +822,7 @@ describe('/form', () => {
 
 			expect(effect).toHaveBeenCalledWith({
 				form: expect.any(Form.Instance),
-				oldValue: '',
+				prevValue: '',
 				value: 'new value',
 				path: ['testField']
 			});
@@ -872,13 +872,13 @@ describe('/form', () => {
 
 			expect(firstEffect).toHaveBeenCalledWith({
 				form: expect.any(Form.Instance),
-				oldValue: '',
+				prevValue: '',
 				value: 'first value',
 				path: ['first']
 			});
 			expect(secondEffect).toHaveBeenCalledWith({
 				form: expect.any(Form.Instance),
-				oldValue: '',
+				prevValue: '',
 				value: 'second value',
 				path: ['second']
 			});
@@ -912,13 +912,13 @@ describe('/form', () => {
 
 			expect(priceTransform).toHaveBeenCalledWith({
 				form: expect.any(Form.Instance),
-				oldValue: 1000,
+				prevValue: 1000,
 				value: 1000,
 				path: ['price']
 			});
 			expect(quantityTransformIn).toHaveBeenCalledWith({
 				form: expect.any(Form.Instance),
-				oldValue: '5',
+				prevValue: '5',
 				value: '5',
 				path: ['quantity']
 			});

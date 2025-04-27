@@ -27,7 +27,7 @@ namespace Item {
 		children: ReactNode | RenderFunction;
 		debounce?: number;
 		defaultValue?: Instance.Value;
-		effect?: (input: { form: Instance; oldValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => void;
+		effect?: (input: { form: Instance; prevValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => void;
 		emptyValue?: Instance.Value;
 		file?: boolean;
 		id?: string;
@@ -38,9 +38,9 @@ namespace Item {
 			| ((data: {
 					value: Instance.Value;
 			  }) => string | boolean | { path: Instance.Path; error: string | boolean }[] | { path: Instance.Path; error: string | boolean });
-		transform?: (input: { form: Instance; oldValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => Instance.Value;
-		transformIn?: (input: { form: Instance; oldValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => Instance.Value;
-		transformOut?: (input: { form: Instance; oldValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => Instance.Value;
+		transform?: (input: { form: Instance; prevValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => Instance.Value;
+		transformIn?: (input: { form: Instance; prevValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => Instance.Value;
+		transformOut?: (input: { form: Instance; prevValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => Instance.Value;
 		valueGetter?: (value: Instance.Value | React.ChangeEvent) => Instance.Value;
 		valueProperty?: string;
 	};
@@ -95,7 +95,7 @@ const Item = forwardRef(
 			if (isFunction(effect)) {
 				effect({
 					form,
-					oldValue: form.get(path.current, defaultValue),
+					prevValue: form.get(path.current, defaultValue),
 					path: path.current,
 					value
 				});
@@ -108,7 +108,7 @@ const Item = forwardRef(
 			if (isFunction(transformIn)) {
 				const newValue = transformIn({
 					form,
-					oldValue: form.get(path.current, defaultValue),
+					prevValue: form.get(path.current, defaultValue),
 					path: path.current,
 					value
 				});
@@ -123,10 +123,10 @@ const Item = forwardRef(
 
 		const transformOutRef = useRef((value: Instance.Value): Instance.Value => {
 			if (isFunction(transformOut)) {
-				const oldValue = form.get(path.current, defaultValue);
+				const prevValue = form.get(path.current, defaultValue);
 				const newValue = transformOut({
 					form,
-					oldValue,
+					prevValue,
 					path: path.current,
 					value
 				});
@@ -143,7 +143,7 @@ const Item = forwardRef(
 			if (isFunction(transform)) {
 				const newValue = transform({
 					form,
-					oldValue: form.get(path.current, defaultValue),
+					prevValue: form.get(path.current, defaultValue),
 					path: path.current,
 					value
 				});
