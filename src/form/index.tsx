@@ -200,6 +200,14 @@ const Form = ({
 	return <context.Provider value={state.contextValue}>{createElement(as, formProps, formChildren)}</context.Provider>;
 };
 
+const dispatchSubmit = (form: HTMLFormElement) => {
+	form.dispatchEvent(
+		new Event('submit', {
+			bubbles: true
+		})
+	);
+};
+
 const Value = ({ path, children }: Form.ValueProps) => {
 	const { form } = useContext(context);
 
@@ -217,6 +225,7 @@ const Value = ({ path, children }: Form.ValueProps) => {
 };
 
 // Static properties
+Form.dispatchSubmit = dispatchSubmit;
 Form.Instance = Instance;
 Form.Item = Item;
 Form.List = List;
