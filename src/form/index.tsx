@@ -4,6 +4,7 @@ import isUndefined from 'lodash/isUndefined';
 import {
 	createElement,
 	ElementType,
+	ForwardedRef,
 	FormEvent,
 	HTMLAttributes,
 	KeyboardEvent,
@@ -41,6 +42,7 @@ namespace Form {
 		locked?: boolean;
 		onChange?: (value: Instance.Value, errors: Instance.Errors) => void;
 		onSubmit?: (payload: SubmitPayload) => void;
+		ref?: ForwardedRef<HTMLFormElement>;
 		value?: Instance.Value;
 	}
 
