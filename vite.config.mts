@@ -21,7 +21,7 @@ export default defineConfig(env => {
 				formats: ['es']
 			},
 			rollupOptions: {
-				external: ['react-dom', 'react', 'react/jsxRuntime'],
+				external: ['react-dom', 'react', 'react/jsx-runtime'],
 				output: {
 					entryFileNames: '[name].js'
 				}
