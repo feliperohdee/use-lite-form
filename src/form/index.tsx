@@ -51,10 +51,14 @@ namespace Form {
 	export type Path = Instance.Path;
 	export type Value = Instance.Value;
 
-	export interface ValueProps {
+	export type ValueProps = {
 		path: Path;
 		children: (value: Instance.Value) => ReactNode;
-	}
+	};
+
+	export type SubmitProps = {
+		children: (value: Instance.Value) => ReactNode;
+	};
 }
 
 const Form = ({
@@ -82,7 +86,10 @@ const Form = ({
 	const [state, setState] = useState({
 		contextValue: {
 			form: formInstance.current,
-			locked
+			locked,
+			submit: (e: FormEvent<HTMLFormElement> | KeyboardEvent<HTMLElement>) => {
+				e.preventDefault();
+			}
 		},
 		errors: formInstance.current.errors,
 		value: formInstance.current.value
@@ -161,6 +168,19 @@ const Form = ({
 		[onSubmit]
 	);
 
+	// Update context when submit handler changes
+	useEffect(() => {
+		setState(state => {
+			return {
+				...state,
+				contextValue: {
+					...state.contextValue,
+					submit: handleSubmit
+				}
+			};
+		});
+	}, [handleSubmit]);
+
 	// Handle emulated submit (Enter key in input)
 	const handleEmulateSubmit = useCallback(
 		(e: KeyboardEvent<HTMLElement>) => {
@@ -208,6 +228,20 @@ const dispatchSubmit = (form: HTMLFormElement) => {
 	);
 };
 
+const Submit = ({ children }: Form.SubmitProps) => {
+	const { form, submit } = useContext(context);
+
+	if (!form) {
+		throw new Error('"Form.Submit" must be used within a "Form" component.');
+	}
+
+	if (!isFunction(children)) {
+		throw new Error('"Form.Submit" requires a render function as children.');
+	}
+
+	return <>{children({ submit })}</>;
+};
+
 const Value = ({ path, children }: Form.ValueProps) => {
 	const { form } = useContext(context);
 
@@ -229,6 +263,7 @@ Form.dispatchSubmit = dispatchSubmit;
 Form.Instance = Instance;
 Form.Item = Item;
 Form.List = List;
+Form.Submit = Submit;
 Form.useForm = useForm;
 Form.Value = Value;
 

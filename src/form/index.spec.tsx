@@ -51,6 +51,45 @@ describe('/form', () => {
 		});
 	});
 
+	it('should handle basic form submission with Form.Submit', () => {
+		const onSubmit = vi.fn();
+		const value = { name: 'Felipe Rohde' };
+
+		render(
+			<Form
+				onSubmit={onSubmit}
+				value={value}
+			>
+				<Form.Item path={['name']}>
+					<input type='text' />
+				</Form.Item>
+
+				<Form.Submit>
+					{({ submit }) => {
+						return (
+							<div
+								data-testid='submit'
+								onClick={submit}
+							>
+								Submit
+							</div>
+						);
+					}}
+				</Form.Submit>
+			</Form>
+		);
+
+		fireEvent.click(screen.getByTestId('submit'));
+
+		expect(onSubmit).toHaveBeenCalledWith({
+			errors: {},
+			errorsCount: 0,
+			form: expect.any(Form.Instance),
+			requiredErrorsCount: 0,
+			value: { name: 'Felipe Rohde' }
+		});
+	});
+
 	it('should validate required fields', () => {
 		const onSubmit = vi.fn();
 
@@ -620,7 +659,11 @@ describe('/form', () => {
 					>
 						<input data-testid='role-input' />
 					</Form.Item>
-					<Form.Value path={['user', 'isAdmin']}>{isAdmin => <div data-testid='admin-status'>{isAdmin ? 'Yes' : 'No'}</div>}</Form.Value>
+					<Form.Value path={['user', 'isAdmin']}>
+						{isAdmin => {
+							return <div data-testid='admin-status'>{isAdmin ? 'Yes' : 'No'}</div>;
+						}}
+					</Form.Value>
 				</Form>
 			);
 
