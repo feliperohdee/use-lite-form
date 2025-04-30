@@ -193,7 +193,9 @@ const Item = forwardRef(
 
 			if (required.current) {
 				if (isFunction(required.current)) {
-					const requiredError = required.current({ value: trimString(stateRef.current.value) });
+					const requiredError = required.current({
+						value: trimString(stateRef.current.value)
+					});
 
 					if (requiredError) {
 						if (isArray(requiredError)) {
@@ -293,7 +295,7 @@ const Item = forwardRef(
 					});
 				}
 			}
-		}, [form, path, defaultValue]);
+		}, [form, form.lastChange]);
 
 		// update path
 		useEffect(() => {
