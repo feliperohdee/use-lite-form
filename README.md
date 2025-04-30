@@ -86,7 +86,7 @@ The main component that provides the form context.
 ```jsx
 <Form
 	onSubmit={payload => console.log(payload.value)}
-	onChange={(value, errors) => console.log(value, errors)}
+	onChange={payload => console.log(payload.value, payload.errors)}
 	value={initialValues}
 >
 	{/* Form content */}

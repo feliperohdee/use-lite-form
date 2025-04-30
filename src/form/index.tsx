@@ -25,6 +25,14 @@ import useForm from '@/form/use-form';
 import util from '@/form/util';
 
 namespace Form {
+	export type ChangePayload = {
+		errors: Instance.Errors;
+		errorsCount: number;
+		form: Instance;
+		requiredErrorsCount: number;
+		value: Instance.Value;
+	};
+
 	export type SubmitPayload = {
 		errors: Instance.Errors;
 		errorsCount: number;
@@ -40,7 +48,7 @@ namespace Form {
 		form?: Instance;
 		implicit?: boolean;
 		locked?: boolean;
-		onChange?: (value: Instance.Value, errors: Instance.Errors) => void;
+		onChange?: (payload: ChangePayload) => void;
 		onSubmit?: (payload: SubmitPayload) => void;
 		ref?: ForwardedRef<HTMLElement>;
 		value?: Instance.Value;
@@ -143,7 +151,13 @@ const Form = ({
 			}));
 
 			if (!silent && isFunction(onChange)) {
-				onChange(value, errors);
+				onChange({
+					errors,
+					errorsCount: formInstance.current.errorsCount(),
+					form: formInstance.current,
+					requiredErrorsCount: formInstance.current.requiredErrorsCount(),
+					value
+				});
 			}
 		},
 		[onChange]
