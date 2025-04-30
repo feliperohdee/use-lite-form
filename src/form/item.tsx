@@ -173,28 +173,28 @@ const Item = forwardRef(
 		const path = useRef(propPath);
 		const reportFormDelayed = useRef<(() => void) & { cancel?: () => void }>(null);
 		const required = useRef(propRequired);
-		const userInputPending = useRef(false);
+		const userInputPendingReport = useRef(false);
 
-		const stateRef = useRef<Item.State>({
+		const innerStateRef = useRef<Item.State>({
 			error: form.getError(path.current),
 			value: transformInRef.current()
 		});
 
-		const [state, setState] = useState<Item.State>(stateRef.current);
+		const [state, setState] = useState<Item.State>(innerStateRef.current);
 		const reportForm = useRef(() => {
-			const transformed = transformOutRef.current(stateRef.current.value);
+			const transformed = transformOutRef.current(innerStateRef.current.value);
 
 			if (isFunction(effect)) {
 				effectRef.current(transformed);
 			}
 
 			form.set(path.current, transformed, false);
-			userInputPending.current = false;
+			userInputPendingReport.current = false;
 
 			if (required.current) {
 				if (isFunction(required.current)) {
 					const requiredError = required.current({
-						value: trimString(stateRef.current.value)
+						value: trimString(innerStateRef.current.value)
 					});
 
 					if (requiredError) {
@@ -221,7 +221,7 @@ const Item = forwardRef(
 						form.setError(path.current, isString(requiredError) ? requiredError : 'Required Field.', false, true);
 						return;
 					}
-				} else if (trimString(stateRef.current.value) === emptyValue) {
+				} else if (trimString(innerStateRef.current.value) === emptyValue) {
 					form.setError(path.current, 'Required Field.', false, true);
 					return;
 				}
@@ -267,10 +267,10 @@ const Item = forwardRef(
 		useEffect(() => {
 			const error = form.getError(path.current);
 
-			// when user input is pending, we just update the error
-			if (userInputPending.current) {
-				if (!isEqual(error, stateRef.current.error)) {
-					stateRef.current.error = error;
+			// when user input is pending to report (means there are changes in the value), we just update the error
+			if (userInputPendingReport.current) {
+				if (!isEqual(error, innerStateRef.current.error)) {
+					innerStateRef.current.error = error;
 					setState(state => {
 						return {
 							...state,
@@ -279,12 +279,12 @@ const Item = forwardRef(
 					});
 				}
 			} else {
-				// when user input is not pending, we update the error and value
+				// when user input is not pending to report, we update the error and value
 				const value = transformInRef.current();
 
-				if (!isEqual(error, stateRef.current.error) || !isEqual(value, stateRef.current.value)) {
-					stateRef.current.error = error;
-					stateRef.current.value = value;
+				if (!isEqual(error, innerStateRef.current.error) || !isEqual(value, innerStateRef.current.value)) {
+					innerStateRef.current.error = error;
+					innerStateRef.current.value = value;
 
 					setState(state => {
 						return {
@@ -323,13 +323,13 @@ const Item = forwardRef(
 					}
 				}
 
-				userInputPending.current = true;
+				userInputPendingReport.current = true;
 
 				if (reportFormDelayed.current?.cancel) {
 					reportFormDelayed.current.cancel();
 				}
 
-				stateRef.current.value = value;
+				innerStateRef.current.value = value;
 				setState(state => {
 					return {
 						...state,

@@ -17,7 +17,7 @@ describe('/form/instance', () => {
 			expect(instance.value).toEqual({});
 			expect(instance.errors).toEqual({});
 			expect(instance.id).toMatch(/^form-\d+$/);
-			expect(instance.lastChange).toBe(0);
+			expect(instance.lastChange).toEqual(0);
 		});
 
 		it('should initialize with provided value', () => {
@@ -35,12 +35,12 @@ describe('/form/instance', () => {
 
 		it('should return value at specified path', () => {
 			instance.value = { user: { name: 'test', age: 30 } };
-			expect(instance.get(['user', 'name'])).toBe('test');
+			expect(instance.get(['user', 'name'])).toEqual('test');
 		});
 
 		it('should return default value when path does not exist', () => {
 			instance.value = { user: { name: 'test' } };
-			expect(instance.get(['user', 'age'], 25)).toBe(25);
+			expect(instance.get(['user', 'age'], 25)).toEqual(25);
 		});
 
 		it('should use cache for repeated calls', () => {
@@ -56,14 +56,14 @@ describe('/form/instance', () => {
 			// Second call should return cached result
 			const result2 = instance.get(path);
 
-			expect(result1).toBe('test');
-			expect(result2).toBe('test');
+			expect(result1).toEqual('test');
+			expect(result2).toEqual('test');
 
 			// After triggering onChange, cache should be cleared
 			instance.triggerOnChange({ silent: true });
 
 			// Now should get the new value
-			expect(instance.get(path)).toBe('modified');
+			expect(instance.get(path)).toEqual('modified');
 		});
 	});
 
@@ -75,7 +75,7 @@ describe('/form/instance', () => {
 
 		it('should return error at specified path', () => {
 			instance.errors = { user: { name: 'Required field' } };
-			expect(instance.getError(['user', 'name'])).toBe('Required field');
+			expect(instance.getError(['user', 'name'])).toEqual('Required field');
 		});
 
 		it('should return null when error at path does not exist', () => {
@@ -280,7 +280,7 @@ describe('/form/instance', () => {
 			instance.clear();
 			expect(instance.value).toEqual({});
 			expect(instance.errors).toEqual({});
-			expect(instance.requiredErrors.size).toBe(0);
+			expect(instance.requiredErrors.size).toEqual(0);
 		});
 
 		it('should trigger onChange when clearing', () => {
@@ -307,7 +307,7 @@ describe('/form/instance', () => {
 			instance.clearErrors();
 			expect(instance.value).toEqual({ name: 'John' });
 			expect(instance.errors).toEqual({});
-			expect(instance.requiredErrors.size).toBe(0);
+			expect(instance.requiredErrors.size).toEqual(0);
 		});
 
 		it('should trigger onChange when clearing errors', () => {
@@ -333,12 +333,12 @@ describe('/form/instance', () => {
 				}
 			};
 
-			expect(instance.errorsCount()).toBe(3);
+			expect(instance.errorsCount()).toEqual(3);
 		});
 
 		it('should return 0 when no errors', () => {
 			instance.errors = {};
-			expect(instance.errorsCount()).toBe(0);
+			expect(instance.errorsCount()).toEqual(0);
 		});
 	});
 
@@ -347,11 +347,11 @@ describe('/form/instance', () => {
 			instance.requiredErrors.add(['name']);
 			instance.requiredErrors.add(['email']);
 
-			expect(instance.requiredErrorsCount()).toBe(2);
+			expect(instance.requiredErrorsCount()).toEqual(2);
 		});
 
 		it('should return 0 when no required errors', () => {
-			expect(instance.requiredErrorsCount()).toBe(0);
+			expect(instance.requiredErrorsCount()).toEqual(0);
 		});
 	});
 
@@ -412,18 +412,18 @@ describe('/form/instance', () => {
 	describe('RequiredErrors class', () => {
 		it('should convert path array to string when adding', () => {
 			instance.requiredErrors.add(['user', 'name']);
-			expect(instance.requiredErrors.has('user.name')).toBe(true);
+			expect(instance.requiredErrors.has('user.name')).toEqual(true);
 		});
 
 		it('should convert path array to string when checking has', () => {
 			instance.requiredErrors.add('user.name');
-			expect(instance.requiredErrors.has(['user', 'name'])).toBe(true);
+			expect(instance.requiredErrors.has(['user', 'name'])).toEqual(true);
 		});
 
 		it('should convert path array to string when deleting', () => {
 			instance.requiredErrors.add('user.name');
 			instance.requiredErrors.delete(['user', 'name']);
-			expect(instance.requiredErrors.has('user.name')).toBe(false);
+			expect(instance.requiredErrors.has('user.name')).toEqual(false);
 		});
 
 		it('should delete all errors starting with the given path', () => {
@@ -433,9 +433,9 @@ describe('/form/instance', () => {
 
 			instance.requiredErrors.delete('user');
 
-			expect(instance.requiredErrors.has('user.name')).toBe(false);
-			expect(instance.requiredErrors.has('user.age')).toBe(false);
-			expect(instance.requiredErrors.has('user.address.city')).toBe(false);
+			expect(instance.requiredErrors.has('user.name')).toEqual(false);
+			expect(instance.requiredErrors.has('user.age')).toEqual(false);
+			expect(instance.requiredErrors.has('user.address.city')).toEqual(false);
 		});
 
 		it('should return true if any error was deleted', () => {
@@ -443,13 +443,13 @@ describe('/form/instance', () => {
 
 			const result = instance.requiredErrors.delete('user');
 
-			expect(result).toBe(true);
+			expect(result).toEqual(true);
 		});
 
 		it('should return false if no error was deleted', () => {
 			const result = instance.requiredErrors.delete('user');
 
-			expect(result).toBe(false);
+			expect(result).toEqual(false);
 		});
 	});
 

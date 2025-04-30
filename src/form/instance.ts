@@ -131,6 +131,7 @@ class Instance {
 	public errors: Instance.Errors;
 	public id: string;
 	public lastChange: number;
+	public lastSubmit: number;
 	public requiredErrors: RequiredErrors;
 	public value: Instance.Value;
 
@@ -144,6 +145,7 @@ class Instance {
 		this.id = `form-${Instance.index++}`;
 		this.items = new Set();
 		this.lastChange = 0;
+		this.lastSubmit = 0;
 		this.onChangeListeners = new Set();
 		this.requiredErrors = new RequiredErrors();
 		this.value = value || {};
@@ -168,6 +170,7 @@ class Instance {
 		this.value = {};
 		this.errors = {};
 		this.requiredErrors.clear();
+		this.lastSubmit = 0;
 		this.triggerOnChange({ silent });
 	}
 

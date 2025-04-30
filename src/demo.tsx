@@ -14,9 +14,11 @@ const Layout = ({ children }: { children: ReactNode; title: string }) => {
 // Basic user form example
 const BasicForm = () => {
 	const [formResult, setFormResult] = useState<any>(null);
+	const [lastSubmitTime, setLastSubmitTime] = useState<number | null>(null);
 
 	const handleSubmit = (payload: Form.SubmitPayload) => {
 		setFormResult(payload.value);
+		setLastSubmitTime(payload.form.lastSubmit);
 	};
 
 	return (
@@ -81,6 +83,7 @@ const BasicForm = () => {
 			{formResult && (
 				<div className='card form-result'>
 					<h3>Form Result</h3>
+					{lastSubmitTime && <p className='submit-time'>Last submitted: {new Date(lastSubmitTime).toLocaleString()}</p>}
 					<pre className='result-display'>{JSON.stringify(formResult, null, 2)}</pre>
 				</div>
 			)}

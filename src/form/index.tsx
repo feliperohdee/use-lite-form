@@ -1,13 +1,14 @@
 import clsx from 'clsx';
 import isFunction from 'lodash/isFunction';
 import isUndefined from 'lodash/isUndefined';
+import now from 'lodash/now';
 import {
 	createElement,
 	ElementType,
 	ForwardedRef,
 	FormEvent,
 	HTMLAttributes,
-	type KeyboardEvent,
+	KeyboardEvent,
 	PropsWithChildren,
 	ReactNode,
 	useCallback,
@@ -82,7 +83,7 @@ const Form = ({
 	value: propValue,
 	...rest
 }: Form.Props) => {
-	const formInstance = useRef(
+	const form = useRef(
 		(() => {
 			if (propForm && !isUndefined(propValue)) {
 				propForm.value = propValue;
@@ -108,14 +109,14 @@ const Form = ({
 
 	const [state, setState] = useState({
 		contextValue: {
-			form: formInstance.current,
+			form: form.current,
 			locked,
 			submit: (e: FormEvent<HTMLFormElement> | KeyboardEvent<HTMLElement>) => {
 				e.preventDefault();
 			}
 		},
-		errors: formInstance.current.errors,
-		value: formInstance.current.value
+		errors: form.current.errors,
+		value: form.current.value
 	});
 
 	// Update context when locked prop changes
@@ -153,9 +154,9 @@ const Form = ({
 			if (!silent && isFunction(onChange)) {
 				onChange({
 					errors,
-					errorsCount: formInstance.current.errorsCount(),
-					form: formInstance.current,
-					requiredErrorsCount: formInstance.current.requiredErrorsCount(),
+					errorsCount: form.current.errorsCount(),
+					form: form.current,
+					requiredErrorsCount: form.current.requiredErrorsCount(),
 					value
 				});
 			}
@@ -165,7 +166,7 @@ const Form = ({
 
 	// Subscribe to form changes
 	useEffect(() => {
-		const unsubscribe = formInstance.current.onChange(handleChange);
+		const unsubscribe = form.current.onChange(handleChange);
 
 		// Cleanup subscription on unmount
 		return () => {
@@ -183,14 +184,15 @@ const Form = ({
 			}
 
 			if (isFunction(onSubmit)) {
-				formInstance.current.requestImmediateValue();
+				form.current.requestImmediateValue();
+				form.current.lastSubmit = now();
 
 				onSubmit({
-					errors: formInstance.current.errors,
-					errorsCount: formInstance.current.errorsCount(),
-					form: formInstance.current,
-					requiredErrorsCount: formInstance.current.requiredErrorsCount(),
-					value: formInstance.current.value
+					errors: form.current.errors,
+					errorsCount: form.current.errorsCount(),
+					form: form.current,
+					requiredErrorsCount: form.current.requiredErrorsCount(),
+					value: form.current.value
 				});
 			}
 		},
@@ -241,11 +243,11 @@ const Form = ({
 	);
 
 	const formChildren = util.renderChildren(children, null, {
-		errorsCount: formInstance.current.errorsCount(),
-		form: formInstance.current,
-		requiredErrorsCount: formInstance.current.requiredErrorsCount(),
+		errorsCount: form.current.errorsCount(),
+		form: form.current,
+		requiredErrorsCount: form.current.requiredErrorsCount(),
 		submit: handleSubmit,
-		value: formInstance.current.value
+		value: form.current.value
 	});
 
 	if (implicit) {
