@@ -128,6 +128,8 @@ class Instance {
 	private items: Set<Instance.RegisteredItem>;
 	private onChangeListeners: Set<Instance.Listener>;
 
+	public changed: boolean;
+	public changesCount: number;
 	public errors: Instance.Errors;
 	public id: string;
 	public lastChange: number;
@@ -142,8 +144,10 @@ class Instance {
 		};
 
 		this.errors = {};
+		this.changed = false;
 		this.id = `form-${Instance.index++}`;
 		this.items = new Set();
+		this.changesCount = 0;
 		this.lastChange = 0;
 		this.lastSubmit = 0;
 		this.onChangeListeners = new Set();
@@ -167,10 +171,9 @@ class Instance {
 	}
 
 	clear(silent: boolean = false): void {
-		this.value = {};
 		this.errors = {};
 		this.requiredErrors.clear();
-		this.lastSubmit = 0;
+		this.value = {};
 		this.triggerOnChange({ silent });
 	}
 
@@ -300,6 +303,11 @@ class Instance {
 	triggerOnChangeDebounced = debounce((args: { silent?: boolean }) => {
 		const { silent = false } = args;
 
+		if (this.changesCount > 0) {
+			this.changed = this.lastChange > this.lastSubmit;
+		}
+
+		this.changesCount += 1;
 		this.onChangeListeners.forEach(listener => {
 			listener(
 				{
