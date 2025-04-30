@@ -1,3 +1,4 @@
+import { createRef } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 
@@ -80,6 +81,35 @@ describe('/form', () => {
 		);
 
 		fireEvent.click(screen.getByTestId('submit'));
+
+		expect(onSubmit).toHaveBeenCalledWith({
+			errors: {},
+			errorsCount: 0,
+			form: expect.any(Form.Instance),
+			requiredErrorsCount: 0,
+			value: { name: 'Felipe Rohde' }
+		});
+	});
+
+	it('should handle basic form submission with Form.dispatchSubmit', () => {
+		const onSubmit = vi.fn();
+		const value = { name: 'Felipe Rohde' };
+		const formRef = createRef<HTMLElement>();
+
+		render(
+			<Form
+				as='div'
+				onSubmit={onSubmit}
+				ref={formRef}
+				value={value}
+			>
+				<Form.Item path={['name']}>
+					<input type='text' />
+				</Form.Item>
+			</Form>
+		);
+
+		Form.dispatchSubmit(formRef.current);
 
 		expect(onSubmit).toHaveBeenCalledWith({
 			errors: {},

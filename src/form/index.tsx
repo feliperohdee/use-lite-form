@@ -7,7 +7,7 @@ import {
 	ForwardedRef,
 	FormEvent,
 	HTMLAttributes,
-	KeyboardEvent,
+	type KeyboardEvent,
 	PropsWithChildren,
 	ReactNode,
 	useCallback,
@@ -42,7 +42,7 @@ namespace Form {
 		locked?: boolean;
 		onChange?: (value: Instance.Value, errors: Instance.Errors) => void;
 		onSubmit?: (payload: SubmitPayload) => void;
-		ref?: ForwardedRef<HTMLFormElement>;
+		ref?: ForwardedRef<HTMLElement>;
 		value?: Instance.Value;
 	}
 
@@ -70,6 +70,7 @@ const Form = ({
 	locked = false,
 	onChange,
 	onSubmit,
+	ref,
 	value: propValue,
 	...rest
 }: Form.Props) => {
@@ -82,6 +83,20 @@ const Form = ({
 			return propForm || new Instance(propValue || {});
 		})()
 	);
+
+	const formRef = useRef<HTMLElement | null>(null);
+	const combinedRef = (node: HTMLElement | null) => {
+		formRef.current = node;
+
+		// forward ref
+		if (ref) {
+			if (isFunction(ref)) {
+				ref(node);
+			} else {
+				ref.current = node;
+			}
+		}
+	};
 
 	const [state, setState] = useState({
 		contextValue: {
@@ -181,6 +196,23 @@ const Form = ({
 		});
 	}, [handleSubmit]);
 
+	// Listen for custom form:submit event
+	useEffect(() => {
+		const onCustomSubmit = (e: CustomEvent) => {
+			handleSubmit(e as unknown as FormEvent<HTMLFormElement>);
+		};
+
+		if (formRef.current) {
+			formRef.current.addEventListener('form:submit', onCustomSubmit as EventListener);
+		}
+
+		return () => {
+			if (formRef.current) {
+				formRef.current.removeEventListener('form:submit', onCustomSubmit as EventListener);
+			}
+		};
+	}, [handleSubmit]);
+
 	// Handle emulated submit (Enter key in input)
 	const handleEmulateSubmit = useCallback(
 		(e: KeyboardEvent<HTMLElement>) => {
@@ -208,6 +240,7 @@ const Form = ({
 
 	const formProps: any = {
 		className: clsx('form', className),
+		ref: combinedRef,
 		...rest
 	};
 
@@ -220,12 +253,19 @@ const Form = ({
 	return <context.Provider value={state.contextValue}>{createElement(as, formProps, formChildren)}</context.Provider>;
 };
 
-const dispatchSubmit = (form: HTMLFormElement) => {
-	form.dispatchEvent(
-		new Event('submit', {
-			bubbles: true
-		})
-	);
+const dispatchSubmit = (element: HTMLElement | null) => {
+	if (!element) {
+		console.warn('Form.dispatchSubmit: No element provided');
+		return;
+	}
+
+	const customSubmitEvent = new CustomEvent('form:submit', {
+		bubbles: true,
+		cancelable: true,
+		detail: { element }
+	});
+
+	element.dispatchEvent(customSubmitEvent);
 };
 
 const Submit = ({ children }: Form.SubmitProps) => {
