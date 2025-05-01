@@ -94,6 +94,7 @@ const Form = ({
 	);
 
 	const formRef = useRef<HTMLElement | null>(null);
+	const init = useRef({ listeningCustomEvent: false });
 	const combinedRef = (node: HTMLElement | null) => {
 		formRef.current = node;
 
@@ -214,6 +215,11 @@ const Form = ({
 
 	// Listen for custom form:submit event
 	useEffect(() => {
+		if (init.current.listeningCustomEvent) {
+			return;
+		}
+		init.current.listeningCustomEvent = true;
+
 		const onCustomSubmit = (e: CustomEvent) => {
 			handleSubmit(e as unknown as FormEvent<HTMLFormElement>);
 		};
