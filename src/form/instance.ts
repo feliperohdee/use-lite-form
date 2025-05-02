@@ -47,7 +47,7 @@ const deepClean = (obj: any): any => {
 			if (isObject(value)) {
 				clone[key] = deepClean(value);
 
-				// If the result is null after processing, delete the property
+				// If the result is null after processing, remove the property
 				if (isNil(clone[key])) {
 					delete clone[key];
 				}
@@ -92,21 +92,21 @@ class RequiredErrors extends Set<string> {
 		return super.add(key);
 	}
 
-	delete(key: string | Instance.Path): boolean {
+	remove(key: string | Instance.Path): boolean {
 		if (isArray(key)) {
 			key = key.join('.');
 		}
 
-		let deleted = false;
+		let removed = false;
 
 		super.forEach(requiredError => {
 			if (requiredError.startsWith(key)) {
 				super.delete(requiredError);
-				deleted = true;
+				removed = true;
 			}
 		});
 
-		return super.delete(key) || deleted;
+		return super.delete(key) || removed;
 	}
 
 	has(key: string | Instance.Path): boolean {
@@ -325,7 +325,7 @@ class Instance {
 
 	unsetError(path: Instance.Path, silent: boolean = false): Instance.Errors {
 		this.errors = deepClean(set(this.errors, path, null)) || {};
-		this.requiredErrors.delete(path);
+		this.requiredErrors.remove(path);
 		this.triggerOnChange({ silent });
 
 		return this.errors;

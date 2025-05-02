@@ -138,7 +138,7 @@ Component for managing arrays of form items.
 				<Form.Item path={[...props.path, 'name']}>
 					<input type='text' />
 				</Form.Item>
-				<button onClick={() => props.delete()}>Delete</button>
+				<button onClick={() => props.remove()}>Remove</button>
 			</div>
 		)}
 	</Form.List.Items>
@@ -291,7 +291,7 @@ const MyComponent = () => {
 					>
 						Move Down
 					</button>
-					<button onClick={() => props.delete()}>Delete</button>
+					<button onClick={() => props.remove()}>Remove</button>
 				</div>
 			</div>
 		)}

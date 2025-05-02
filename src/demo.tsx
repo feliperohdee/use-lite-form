@@ -468,8 +468,8 @@ const FormListExample = () => {
 
 										<button
 											type='button'
-											onClick={() => props.delete()}
-											className='delete-button'
+											onClick={() => props.remove()}
+											className='remove-button'
 										>
 											X
 										</button>

@@ -162,9 +162,9 @@ describe('/form/instance', () => {
 		});
 
 		it('should remove from requiredErrors', () => {
-			const deleteSpy = vi.spyOn(instance.requiredErrors, 'delete');
+			const removeSpy = vi.spyOn(instance.requiredErrors, 'remove');
 			instance.unsetError(['user', 'name']);
-			expect(deleteSpy).toHaveBeenCalledWith(['user', 'name']);
+			expect(removeSpy).toHaveBeenCalledWith(['user', 'name']);
 		});
 
 		it('should trigger onChange when unsetting an error', () => {
@@ -422,32 +422,32 @@ describe('/form/instance', () => {
 
 		it('should convert path array to string when deleting', () => {
 			instance.requiredErrors.add('user.name');
-			instance.requiredErrors.delete(['user', 'name']);
+			instance.requiredErrors.remove(['user', 'name']);
 			expect(instance.requiredErrors.has('user.name')).toEqual(false);
 		});
 
-		it('should delete all errors starting with the given path', () => {
+		it('should remove all errors starting with the given path', () => {
 			instance.requiredErrors.add('user.name');
 			instance.requiredErrors.add('user.age');
 			instance.requiredErrors.add('user.address.city');
 
-			instance.requiredErrors.delete('user');
+			instance.requiredErrors.remove('user');
 
 			expect(instance.requiredErrors.has('user.name')).toEqual(false);
 			expect(instance.requiredErrors.has('user.age')).toEqual(false);
 			expect(instance.requiredErrors.has('user.address.city')).toEqual(false);
 		});
 
-		it('should return true if any error was deleted', () => {
+		it('should return true if any error was removed', () => {
 			instance.requiredErrors.add('user.name');
 
-			const result = instance.requiredErrors.delete('user');
+			const result = instance.requiredErrors.remove('user');
 
 			expect(result).toEqual(true);
 		});
 
-		it('should return false if no error was deleted', () => {
-			const result = instance.requiredErrors.delete('user');
+		it('should return false if no error was removed', () => {
+			const result = instance.requiredErrors.remove('user');
 
 			expect(result).toEqual(false);
 		});

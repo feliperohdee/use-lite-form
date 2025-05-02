@@ -15,12 +15,12 @@ import util from '@/form/util';
 namespace List {
 	export type Context = {
 		canAdd: boolean;
-		canDelete: boolean;
+		canRemove: boolean;
 		getId: (value: Instance.Value, key: number, index: number) => string;
 		getKey: (index: number) => number;
 		getValue: (index?: number) => Instance.Value | null;
 		handleAdd: (value: Instance.Value, index?: number) => number;
-		handleDelete: (index: number) => void;
+		handleRemove: (index: number) => void;
 		handleMove: (from: number, to: number) => void;
 		items: Item[];
 		path: Instance.Path;
@@ -39,8 +39,8 @@ namespace List {
 		addAfter: (value: Instance.Value) => number | undefined;
 		addBefore: (value: Instance.Value) => number | undefined;
 		canAdd: boolean;
-		canDelete: boolean;
-		delete: () => void;
+		canRemove: boolean;
+		remove: () => void;
 		duplicate: (newValue?: Instance.Value | ((value: Instance.Value) => Instance.Value)) => number | undefined;
 		error: () => Instance.Error | Instance.Error[];
 		first: boolean;
@@ -73,12 +73,12 @@ namespace List {
 
 const listContext = createContext<List.Context>({
 	canAdd: false,
-	canDelete: false,
+	canRemove: false,
 	getId: () => '',
 	getValue: () => null,
 	getKey: () => 0,
 	handleAdd: () => 0,
-	handleDelete: () => {},
+	handleRemove: () => {},
 	handleMove: () => {},
 	items: [],
 	path: [],
@@ -202,11 +202,11 @@ const List = ({
 		[form, path]
 	);
 
-	const handleDelete = useCallback(
+	const handleRemove = useCallback(
 		(index: number) => {
 			const items = form.get(path, []) as Instance.Value[];
 
-			form.requiredErrors.delete([...path, index]);
+			form.requiredErrors.remove([...path, index]);
 			form.unsetError([...path, index]);
 
 			keyManager.current.keys = reject(keyManager.current.keys, (_, index_) => {
@@ -247,16 +247,16 @@ const List = ({
 
 	const itemsSize = size(items);
 	const canAdd = itemsSize < max;
-	const canDelete = itemsSize > min;
+	const canRemove = itemsSize > min;
 
 	const contextValue: List.Context = {
 		canAdd,
-		canDelete,
+		canRemove,
 		getId,
 		getKey,
 		getValue,
 		handleAdd,
-		handleDelete,
+		handleRemove,
 		handleMove,
 		items,
 		path,
@@ -287,12 +287,12 @@ const ListItems = ({ children, filter: filterFn }: List.ItemsProps) => {
 	let { form } = useContext(context);
 	let {
 		canAdd,
-		canDelete,
+		canRemove,
 		getId,
 		getKey,
 		getValue,
 		handleAdd,
-		handleDelete,
+		handleRemove,
 		handleMove,
 		items,
 		path,
@@ -336,12 +336,12 @@ const ListItems = ({ children, filter: filterFn }: List.ItemsProps) => {
 				return handleAdd(value, index);
 			},
 			canAdd,
-			canDelete,
-			delete: () => {
-				if (!canDelete) {
+			canRemove,
+			remove: () => {
+				if (!canRemove) {
 					return;
 				}
-				return handleDelete(index);
+				return handleRemove(index);
 			},
 			duplicate: (newValue?: Instance.Value | ((value: Instance.Value) => Instance.Value)) => {
 				if (!canAdd) {

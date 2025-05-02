@@ -258,13 +258,13 @@ describe('/form', () => {
 										</Form.Item>
 
 										<button
-											data-testid={`delete-${props.index}`}
+											data-testid={`remove-${props.index}`}
 											onClick={e => {
 												e.preventDefault();
-												return props.delete();
+												return props.remove();
 											}}
 										>
-											Delete
+											Remove
 										</button>
 									</div>
 								);
@@ -303,7 +303,7 @@ describe('/form', () => {
 			await wait(20);
 
 			expect(screen.getAllByTestId('text')).toHaveLength(3);
-			fireEvent.click(screen.getByTestId('delete-0'));
+			fireEvent.click(screen.getByTestId('remove-0'));
 			await wait(20);
 			expect(screen.getAllByTestId('text')).toHaveLength(2);
 
