@@ -118,7 +118,7 @@ class RequiredErrors extends Set<string> {
 	}
 }
 
-class Instance {
+class Instance<T extends object = any> {
 	private static index = 0;
 	private cache: {
 		error: { [key: string]: Instance.Error };
@@ -135,9 +135,9 @@ class Instance {
 	public lastChange: number;
 	public lastSubmit: number;
 	public requiredErrors: RequiredErrors;
-	public value: Instance.Value;
+	public value: T;
 
-	constructor(value?: Instance.Value) {
+	constructor(value?: T) {
 		this.cache = {
 			error: {},
 			get: {}
@@ -152,7 +152,7 @@ class Instance {
 		this.lastSubmit = 0;
 		this.onChangeListeners = new Set();
 		this.requiredErrors = new RequiredErrors();
-		this.value = value || {};
+		this.value = value || ({} as T);
 	}
 
 	private cacheFlush(): void {
@@ -173,7 +173,7 @@ class Instance {
 	clear(silent: boolean = false): void {
 		this.errors = {};
 		this.requiredErrors.clear();
-		this.value = {};
+		this.value = {} as T;
 		this.triggerOnChange({ silent });
 	}
 
