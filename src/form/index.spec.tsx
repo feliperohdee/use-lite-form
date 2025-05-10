@@ -19,6 +19,31 @@ describe('/form', () => {
 		expect(screen.getByText('Test Form')).toBeTruthy();
 	});
 
+	it('should handle basic form init', () => {
+		const onInit = vi.fn();
+
+		render(
+			<Form
+				onInit={onInit}
+				value={{ name: 'Felipe Rohde' }}
+			>
+				<Form.Item path={['name']}>
+					<input type='text' />
+				</Form.Item>
+			</Form>
+		);
+
+		expect(onInit).toHaveBeenCalledWith({
+			errors: {},
+			errorsCount: 0,
+			form: expect.any(Form.Instance),
+			requiredErrorsCount: 0,
+			value: {
+				name: 'Felipe Rohde'
+			}
+		});
+	});
+
 	it('should handle basic form submission', () => {
 		const onSubmit = vi.fn();
 		const value = { name: 'Felipe Rohde' };

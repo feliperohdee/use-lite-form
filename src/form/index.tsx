@@ -26,21 +26,16 @@ import useForm from '@/form/use-form';
 import util from '@/form/util';
 
 namespace Form {
-	export type ChangePayload = {
+	export type Payload = {
 		errors: Instance.Errors;
 		errorsCount: number;
 		form: Instance;
 		requiredErrorsCount: number;
 		value: Instance.Value;
 	};
-
-	export type SubmitPayload = {
-		errors: Instance.Errors;
-		errorsCount: number;
-		form: Instance;
-		requiredErrorsCount: number;
-		value: Instance.Value;
-	};
+	export type ChangePayload = Payload;
+	export type InitPayload = Payload;
+	export type SubmitPayload = Payload;
 
 	export interface Props extends Omit<PropsWithChildren<HTMLAttributes<HTMLElement>>, 'onChange' | 'onSubmit'> {
 		as?: ElementType;
@@ -50,6 +45,7 @@ namespace Form {
 		implicit?: boolean;
 		locked?: boolean;
 		onChange?: (payload: ChangePayload) => void;
+		onInit?: (payload: InitPayload) => void;
 		onSubmit?: (payload: SubmitPayload) => void;
 		ref?: ForwardedRef<HTMLElement>;
 		value?: Instance.Value;
@@ -78,6 +74,7 @@ const Form = ({
 	implicit = false,
 	locked = false,
 	onChange,
+	onInit,
 	onSubmit,
 	ref,
 	value: propValue,
@@ -122,13 +119,15 @@ const Form = ({
 
 	// Update context when locked prop changes
 	useEffect(() => {
-		setState(prevState => ({
-			...prevState,
-			contextValue: {
-				...prevState.contextValue,
-				locked
-			}
-		}));
+		setState(prevState => {
+			return {
+				...prevState,
+				contextValue: {
+					...prevState.contextValue,
+					locked
+				}
+			};
+		});
 	}, [locked]);
 
 	// Form change handler
@@ -144,13 +143,15 @@ const Form = ({
 			silent = false
 		) => {
 			// force context consumers to update
-			setState(prevState => ({
-				contextValue: {
-					...prevState.contextValue
-				},
-				errors,
-				value
-			}));
+			setState(prevState => {
+				return {
+					contextValue: {
+						...prevState.contextValue
+					},
+					errors,
+					value
+				};
+			});
 
 			if (!silent && isFunction(onChange)) {
 				onChange({
@@ -234,6 +235,19 @@ const Form = ({
 			}
 		};
 	}, [handleSubmit]);
+
+	// Handle form init
+	useEffect(() => {
+		if (isFunction(onInit)) {
+			onInit({
+				errors: form.current.errors,
+				errorsCount: form.current.errorsCount(),
+				form: form.current,
+				requiredErrorsCount: form.current.requiredErrorsCount(),
+				value: form.current.value
+			});
+		}
+	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
 	// Handle emulated submit (Enter key in input)
 	const handleEmulateSubmit = useCallback(
