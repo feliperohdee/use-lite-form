@@ -168,31 +168,31 @@ Hook to access the form instance and values.
 
 ```jsx
 const MyComponent = () => {
-	const { form, value } = Form.useForm(['user']);
+	const { instance, value } = Form.useForm(['user']);
 
 	// Access specific path value
 	console.log(value.name);
 
 	// Call form methods
-	form.set(['user', 'name'], 'New Value');
+	instance.set(['user', 'name'], 'New Value');
 
 	return <div>...</div>;
 };
 ```
 
-### `Form.useFormInstance(initialValue?: object)`
+### `Form.useNewForm(initialValue?: object)`
 
 Hook to create a new form instance.
 
 ```jsx
 const MyComponent = () => {
-	const { form, value } = Form.useFormInstance({ name: 'Felipe' });
+	const { instance, value } = Form.useNewForm({ name: 'Felipe' });
 
 	// Access specific path value
 	console.log(value.name);
 
 	// Call form methods
-	form.set(['user', 'name'], 'New Value');
+	instance.set(['user', 'name'], 'New Value');
 
 	return <div>...</div>;
 };

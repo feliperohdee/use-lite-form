@@ -23,7 +23,7 @@ import Instance from '@/form/instance';
 import Item from '@/form/item';
 import List from '@/form/list';
 import useForm from '@/form/use-form';
-import useFormInstance from '@/form/use-form-instance';
+import useNewForm from '@/form/use-new-form';
 import util from '@/form/util';
 
 namespace Form {
@@ -31,12 +31,13 @@ namespace Form {
 		as?: ElementType;
 		children: ReactNode;
 		className?: string;
-		form?: Instance;
+		instance?: Instance;
 		implicit?: boolean;
 		locked?: boolean;
 		onChange?: (payload: Instance.Payload) => void;
 		onInit?: (payload: Instance.Payload) => void;
 		onSubmit?: (payload: Instance.Payload) => void;
+		submitOnEnter?: boolean;
 		ref?: ForwardedRef<HTMLElement>;
 		value?: Instance.Value;
 	}
@@ -60,25 +61,28 @@ const Form = ({
 	as = 'form',
 	className,
 	children,
-	form: propForm,
+	instance,
 	implicit = false,
 	locked = false,
 	onChange,
 	onInit,
 	onSubmit,
 	ref,
+	submitOnEnter = false,
 	value: propValue,
 	...rest
 }: Form.Props) => {
-	const form = useRef(
-		(() => {
-			if (propForm && !isUndefined(propValue)) {
-				propForm.value = propValue;
-			}
+	const instanceRef = useRef<Instance>(null!);
 
-			return propForm || new Instance(propValue || {});
-		})()
-	);
+	if (!instanceRef.current) {
+		const initialInstance = instance || new Instance(propValue || {});
+
+		if (instance && !isUndefined(propValue)) {
+			instance.value = propValue;
+		}
+
+		instanceRef.current = initialInstance;
+	}
 
 	const formRef = useRef<HTMLElement | null>(null);
 	const init = useRef({ listeningCustomEvent: false });
@@ -96,7 +100,7 @@ const Form = ({
 	};
 
 	const [contextState, setContextState] = useState({
-		form: form.current,
+		instance: instanceRef.current,
 		locked,
 		submit: (e: FormEvent<HTMLFormElement> | KeyboardEvent<HTMLElement>) => {
 			e.preventDefault();
@@ -132,7 +136,7 @@ const Form = ({
 
 	// Subscribe to form changes
 	useEffect(() => {
-		const unsubscribe = form.current.onChange(handleChange);
+		const unsubscribe = instanceRef.current.onChange(handleChange);
 
 		// Cleanup subscription on unmount
 		return () => {
@@ -150,10 +154,10 @@ const Form = ({
 			}
 
 			if (isFunction(onSubmit)) {
-				form.current.requestImmediateValue();
-				form.current.lastSubmit = now();
+				instanceRef.current.requestImmediateValue();
+				instanceRef.current.lastSubmit = now();
 
-				onSubmit(form.current.getPayload());
+				onSubmit(instanceRef.current.getPayload());
 			}
 		},
 		[onSubmit]
@@ -194,7 +198,7 @@ const Form = ({
 	// Handle form init
 	useEffect(() => {
 		if (isFunction(onInit)) {
-			onInit(form.current.getPayload());
+			onInit(instanceRef.current.getPayload());
 		}
 	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -212,7 +216,7 @@ const Form = ({
 	);
 
 	const formChildren = util.renderChildren(children, null, {
-		...form.current.getPayload(),
+		...instanceRef.current.getPayload(),
 		submit: handleSubmit
 	});
 
@@ -228,7 +232,7 @@ const Form = ({
 
 	if (as === 'form') {
 		formProps.onSubmit = handleSubmit;
-	} else {
+	} else if (submitOnEnter) {
 		formProps.onKeyDown = handleEmulateSubmit;
 	}
 
@@ -251,9 +255,9 @@ const dispatchSubmit = (element: HTMLElement | null) => {
 };
 
 const Submit = ({ children }: Form.SubmitProps) => {
-	const { form, submit } = useContext(context);
+	const { instance, submit } = useContext(context);
 
-	if (!form) {
+	if (!instance) {
 		throw new Error('"Form.Submit" must be used within a "Form" component.');
 	}
 
@@ -265,9 +269,9 @@ const Submit = ({ children }: Form.SubmitProps) => {
 };
 
 const Value = ({ path, children }: Form.ValueProps) => {
-	const { form } = useContext(context);
+	const { instance } = useContext(context);
 
-	if (!form) {
+	if (!instance) {
 		throw new Error('"Form.Value" must be used within a "Form" component.');
 	}
 
@@ -275,7 +279,7 @@ const Value = ({ path, children }: Form.ValueProps) => {
 		throw new Error('"Form.Value" requires a render function as children.');
 	}
 
-	const value = form.get(path);
+	const value = instance.get(path);
 
 	return <>{children(value)}</>;
 };
@@ -287,7 +291,7 @@ Form.Item = Item;
 Form.List = List;
 Form.Submit = Submit;
 Form.useForm = useForm;
-Form.useFormInstance = useFormInstance;
+Form.useNewForm = useNewForm;
 Form.Value = Value;
 
 export default Form;

@@ -27,7 +27,7 @@ namespace Item {
 		children: ReactNode | RenderFunction;
 		debounce?: number;
 		defaultValue?: Instance.Value;
-		effect?: (input: { form: Instance; prevValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => void;
+		effect?: (input: { instance: Instance; prevValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => void;
 		emptyValue?: Instance.Value;
 		file?: boolean;
 		id?: string;
@@ -38,9 +38,9 @@ namespace Item {
 			| ((data: {
 					value: Instance.Value;
 			  }) => string | boolean | { path: Instance.Path; error: string | boolean }[] | { path: Instance.Path; error: string | boolean });
-		transform?: (input: { form: Instance; prevValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => Instance.Value;
-		transformIn?: (input: { form: Instance; prevValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => Instance.Value;
-		transformOut?: (input: { form: Instance; prevValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => Instance.Value;
+		transform?: (input: { instance: Instance; prevValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => Instance.Value;
+		transformIn?: (input: { instance: Instance; prevValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => Instance.Value;
+		transformOut?: (input: { instance: Instance; prevValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => Instance.Value;
 		valueGetter?: (value: Instance.Value | React.ChangeEvent) => Instance.Value;
 		valueProperty?: string;
 	};
@@ -81,10 +81,10 @@ const Item = forwardRef(
 		}: Item.Props,
 		ref: ForwardedRef<unknown>
 	) => {
-		const { form, locked } = useContext(context);
+		const { instance, locked } = useContext(context);
 
-		if (isUndefined(form)) {
-			throw new Error(`"Form.Item" must be used within a "Form" component.`);
+		if (isUndefined(instance)) {
+			throw new Error(`"instance.Item" must be used within a "Form" component.`);
 		}
 
 		if (!isArray(propPath)) {
@@ -94,8 +94,8 @@ const Item = forwardRef(
 		const effectRef = useRef((value: Instance.Value) => {
 			if (isFunction(effect)) {
 				effect({
-					form,
-					prevValue: form.get(path.current, defaultValue),
+					instance,
+					prevValue: instance.get(path.current, defaultValue),
 					path: path.current,
 					value
 				});
@@ -103,12 +103,12 @@ const Item = forwardRef(
 		});
 
 		const transformInRef = useRef((): Instance.Value => {
-			const value = form.get(path.current, defaultValue);
+			const value = instance.get(path.current, defaultValue);
 
 			if (isFunction(transformIn)) {
 				const newValue = transformIn({
-					form,
-					prevValue: form.get(path.current, defaultValue),
+					instance,
+					prevValue: instance.get(path.current, defaultValue),
 					path: path.current,
 					value
 				});
@@ -123,9 +123,9 @@ const Item = forwardRef(
 
 		const transformOutRef = useRef((value: Instance.Value): Instance.Value => {
 			if (isFunction(transformOut)) {
-				const prevValue = form.get(path.current, defaultValue);
+				const prevValue = instance.get(path.current, defaultValue);
 				const newValue = transformOut({
-					form,
+					instance,
 					prevValue,
 					path: path.current,
 					value
@@ -142,8 +142,8 @@ const Item = forwardRef(
 		const transformRef = useRef((value: Instance.Value): Instance.Value => {
 			if (isFunction(transform)) {
 				const newValue = transform({
-					form,
-					prevValue: form.get(path.current, defaultValue),
+					instance,
+					prevValue: instance.get(path.current, defaultValue),
 					path: path.current,
 					value
 				});
@@ -176,7 +176,7 @@ const Item = forwardRef(
 		const userInputPendingReport = useRef(false);
 
 		const innerStateRef = useRef<Item.State>({
-			error: form.getError(path.current),
+			error: instance.getError(path.current),
 			value: transformInRef.current()
 		});
 
@@ -188,7 +188,7 @@ const Item = forwardRef(
 				effectRef.current(transformed);
 			}
 
-			form.set(path.current, transformed, false);
+			instance.set(path.current, transformed, false);
 			userInputPendingReport.current = false;
 
 			if (required.current) {
@@ -202,32 +202,32 @@ const Item = forwardRef(
 							forEach(requiredError, ({ path, error }) => {
 								if (isArray(path)) {
 									if (error) {
-										form.setError(path, isString(error) ? error : 'Required Field.', false, true);
+										instance.setError(path, isString(error) ? error : 'Required Field.', false, true);
 									} else {
-										form.unsetError(path);
+										instance.unsetError(path);
 									}
 								}
 							});
 							return;
 						} else if (isObject(requiredError) && isArray(requiredError.path)) {
 							if (requiredError.error) {
-								form.setError(requiredError.path, isString(requiredError.error) ? requiredError.error : 'Required Field.', false, true);
+								instance.setError(requiredError.path, isString(requiredError.error) ? requiredError.error : 'Required Field.', false, true);
 							} else {
-								form.unsetError(requiredError.path);
+								instance.unsetError(requiredError.path);
 							}
 							return;
 						}
 
-						form.setError(path.current, isString(requiredError) ? requiredError : 'Required Field.', false, true);
+						instance.setError(path.current, isString(requiredError) ? requiredError : 'Required Field.', false, true);
 						return;
 					}
 				} else if (trimString(innerStateRef.current.value) === emptyValue) {
-					form.setError(path.current, 'Required Field.', false, true);
+					instance.setError(path.current, 'Required Field.', false, true);
 					return;
 				}
 			}
 
-			form.unsetError(path.current);
+			instance.unsetError(path.current);
 		});
 
 		// effect to setup form, runs once
@@ -251,7 +251,7 @@ const Item = forwardRef(
 				};
 			}
 
-			form.registerItem(item.current);
+			instance.registerItem(item.current);
 
 			return () => {
 				if (reportFormDelayed.current?.cancel) {
@@ -259,13 +259,13 @@ const Item = forwardRef(
 				}
 
 				if (item.current) {
-					form.unregisterItem(item.current);
+					instance.unregisterItem(item.current);
 				}
 			};
 		}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
 		useEffect(() => {
-			const error = form.getError(path.current);
+			const error = instance.getError(path.current);
 
 			// when user input is pending to report (means there are changes in the value), we just update the error
 			if (userInputPendingReport.current) {
@@ -295,7 +295,7 @@ const Item = forwardRef(
 					});
 				}
 			}
-		}, [form, form.lastChange]);
+		}, [instance, instance.lastChange]);
 
 		// update path
 		useEffect(() => {

@@ -118,7 +118,7 @@ const List = ({
 	max = Infinity,
 	path
 }: List.Props) => {
-	const { form } = useContext(context);
+	const { instance } = useContext(context);
 	const keyManager = useRef({ keys: [] as number[], id: 0 });
 
 	const getKey = useCallback((index: number) => {
@@ -138,23 +138,23 @@ const List = ({
 				return 0;
 			}
 
-			const items = form.get(path, []);
+			const items = instance.get(path, []);
 			const key = keyManager.current.id++;
 			const itemsSize = size(items);
 
 			if (index >= 0 && index <= itemsSize) {
 				keyManager.current.keys = [...keyManager.current.keys.slice(0, index), key, ...keyManager.current.keys.slice(index)];
-				form.set(path, [...items.slice(0, index), value, ...items.slice(index)]);
+				instance.set(path, [...items.slice(0, index), value, ...items.slice(index)]);
 
 				return key;
 			}
 
 			keyManager.current.keys = [...keyManager.current.keys, key];
-			form.set(path, [...items, value]);
+			instance.set(path, [...items, value]);
 
 			return key;
 		},
-		[form, path]
+		[instance, path]
 	);
 
 	const handleMove = useCallback(
@@ -163,7 +163,7 @@ const List = ({
 				return;
 			}
 
-			const items = form.get(path, []);
+			const items = instance.get(path, []);
 			const itemsSize = size(items);
 
 			// Do not handle out of range
@@ -173,57 +173,57 @@ const List = ({
 
 			keyManager.current.keys = move(keyManager.current.keys, from, to);
 
-			const fromError = form.getError([...path, from]) as Instance.Error;
-			const fromRequiredError = form.requiredErrors.has([...path, from]);
-			const toError = form.getError([...path, to]) as Instance.Error;
-			const toRequiredError = form.requiredErrors.has([...path, to]);
+			const fromError = instance.getError([...path, from]) as Instance.Error;
+			const fromRequiredError = instance.requiredErrors.has([...path, from]);
+			const toError = instance.getError([...path, to]) as Instance.Error;
+			const toRequiredError = instance.requiredErrors.has([...path, to]);
 
-			form.unsetError([...path, from]);
-			form.unsetError([...path, to]);
+			instance.unsetError([...path, from]);
+			instance.unsetError([...path, to]);
 
 			if (fromError) {
-				form.setError([...path, to], fromError);
+				instance.setError([...path, to], fromError);
 
 				if (fromRequiredError) {
-					form.requiredErrors.add([...path, to]);
+					instance.requiredErrors.add([...path, to]);
 				}
 			}
 
 			if (toError) {
-				form.setError([...path, from], toError);
+				instance.setError([...path, from], toError);
 
 				if (toRequiredError) {
-					form.requiredErrors.add([...path, from]);
+					instance.requiredErrors.add([...path, from]);
 				}
 			}
 
-			return form.set(path, move(items, from, to));
+			return instance.set(path, move(items, from, to));
 		},
-		[form, path]
+		[instance, path]
 	);
 
 	const handleRemove = useCallback(
 		(index: number) => {
-			const items = form.get(path, []) as Instance.Value[];
+			const items = instance.get(path, []) as Instance.Value[];
 
-			form.requiredErrors.remove([...path, index]);
-			form.unsetError([...path, index]);
+			instance.requiredErrors.remove([...path, index]);
+			instance.unsetError([...path, index]);
 
 			keyManager.current.keys = reject(keyManager.current.keys, (_, index_) => {
 				return index === index_;
 			});
 
-			return form.set(
+			return instance.set(
 				path,
 				reject(items, (_, index_) => {
 					return index === index_;
 				})
 			);
 		},
-		[form, path]
+		[instance, path]
 	);
 
-	const items = map(form.get(path, []), (value, index) => ({
+	const items = map(instance.get(path, []), (value, index) => ({
 		index,
 		value
 	}));
@@ -242,7 +242,7 @@ const List = ({
 	);
 
 	const replace = (value: Instance.Value) => {
-		return form.set(path, value);
+		return instance.set(path, value);
 	};
 
 	const itemsSize = size(items);
@@ -284,7 +284,7 @@ const List = ({
 };
 
 const ListItems = ({ children, filter: filterFn }: List.ItemsProps) => {
-	let { form } = useContext(context);
+	let { instance } = useContext(context);
 	let {
 		canAdd,
 		canRemove,
@@ -359,7 +359,7 @@ const ListItems = ({ children, filter: filterFn }: List.ItemsProps) => {
 				return handleAdd({ ...value, ...newValue }, index + 1);
 			},
 			error: () => {
-				return form.getError([...path, index]) as Instance.Error | Instance.Error[];
+				return instance.getError([...path, index]) as Instance.Error | Instance.Error[];
 			},
 			first,
 			getValue,

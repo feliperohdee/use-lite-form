@@ -3,7 +3,7 @@ import isFunction from 'lodash/isFunction';
 
 import Instance from '@/form/instance';
 
-const useFormInstance = <T extends object = Instance.Value>(initialValue?: T): Instance.Payload<T> => {
+const useNewForm = <T extends object = Instance.Value>(initialValue?: T): Instance.Payload<T> => {
 	const formRef = useRef(new Instance<T>(initialValue));
 	const [state, setState] = useState<Instance.Payload<T>>(() => {
 		return formRef.current.getPayload();
@@ -27,4 +27,4 @@ const useFormInstance = <T extends object = Instance.Value>(initialValue?: T): I
 	return state;
 };
 
-export default useFormInstance;
+export default useNewForm;

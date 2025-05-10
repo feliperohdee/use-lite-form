@@ -16,9 +16,9 @@ const BasicForm = () => {
 	const [formResult, setFormResult] = useState<any>(null);
 	const [lastSubmitTime, setLastSubmitTime] = useState<number | null>(null);
 
-	const handleSubmit = (payload: Form.SubmitPayload) => {
+	const handleSubmit = (payload: Form.Payload) => {
 		setFormResult(payload.value);
-		setLastSubmitTime(payload.form.lastSubmit);
+		setLastSubmitTime(payload.lastSubmit);
 	};
 
 	return (
@@ -95,11 +95,11 @@ const BasicForm = () => {
 const ValidationForm = () => {
 	const [formResult, setFormResult] = useState<any>(null);
 
-	const handleSubmit = (payload: Form.SubmitPayload) => {
+	const handleSubmit = (payload: Form.Payload) => {
 		setFormResult({
-			value: payload.value,
 			errors: payload.errors,
-			errorsCount: payload.errorsCount
+			errorsCount: payload.errorsCount,
+			value: payload.value
 		});
 	};
 
@@ -215,7 +215,7 @@ const ValidationForm = () => {
 const DynamicForm = () => {
 	const [formResult, setFormResult] = useState<any>(null);
 
-	const handleSubmit = (payload: Form.SubmitPayload) => {
+	const handleSubmit = (payload: Form.Payload) => {
 		setFormResult(payload.value);
 	};
 
@@ -404,7 +404,7 @@ const DynamicForm = () => {
 const FormListExample = () => {
 	const [formResult, setFormResult] = useState<any>(null);
 
-	const handleSubmit = (payload: Form.SubmitPayload) => {
+	const handleSubmit = (payload: Form.Payload) => {
 		setFormResult(payload.value);
 	};
 
@@ -516,7 +516,7 @@ const FormListExample = () => {
 const AdvancedForm = () => {
 	const [formResult, setFormResult] = useState<any>(null);
 
-	const handleSubmit = (payload: Form.SubmitPayload) => {
+	const handleSubmit = (payload: Form.Payload) => {
 		setFormResult(payload.value);
 	};
 

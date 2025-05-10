@@ -371,7 +371,7 @@ describe('/form/instance', () => {
 					changesCount: 1,
 					errors: {},
 					errorsCount: 0,
-					form: instance,
+					instance,
 					lastChange: expect.any(Number),
 					lastSubmit: expect.any(Number),
 					requiredErrorsCount: 0,

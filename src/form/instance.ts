@@ -76,7 +76,7 @@ namespace Instance {
 		changesCount: number;
 		errors: Instance.Errors;
 		errorsCount: number;
-		form: Instance<T>;
+		instance: Instance<T>;
 		lastChange: number;
 		lastSubmit: number;
 		requiredErrorsCount: number;
@@ -196,6 +196,10 @@ class Instance<T extends object = Instance.Value> {
 		this.triggerOnChange({ silent });
 	}
 
+	errorsCount(): number {
+		return size(this.errors);
+	}
+
 	get(path?: Instance.Nil, defaultValue?: Instance.Nil): T;
 	get<V extends Instance.Value = Instance.Value>(path?: Instance.Path, defaultValue?: Instance.Value): V;
 	get<V extends Instance.Value = Instance.Value>(path: Instance.Path | Instance.Nil, defaultValue?: Instance.Value | Instance.Nil): V | T {
@@ -240,7 +244,7 @@ class Instance<T extends object = Instance.Value> {
 			changesCount: this.changesCount,
 			errors: this.errors,
 			errorsCount: this.errorsCount(),
-			form: this,
+			instance: this,
 			lastChange: this.lastChange,
 			lastSubmit: this.lastSubmit,
 			requiredErrorsCount: this.requiredErrorsCount(),
@@ -248,8 +252,13 @@ class Instance<T extends object = Instance.Value> {
 		};
 	}
 
-	errorsCount(): number {
-		return size(this.errors);
+	init(value: T, silent: boolean = false): void {
+		if (size(this.value) > 0) {
+			return;
+		}
+
+		this.value = value;
+		this.triggerOnChange({ silent });
 	}
 
 	onChange(listener: Instance.Listener): () => void {

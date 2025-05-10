@@ -9,15 +9,15 @@ type UseForm = {
 };
 
 const useForm: UseForm = <V = Instance.Nil, T extends object = Instance.Value>(path?: Instance.Path): Instance.Payload<T, V> => {
-	const { form } = useContext(FormContext);
+	const { instance } = useContext(FormContext);
 
-	if (!form) {
+	if (!instance) {
 		throw new Error('"useForm" must be wrapped by a "Form".');
 	}
 
 	return {
-		...form.getPayload(),
-		value: form.get(path, null)
+		...instance.getPayload(),
+		value: instance.get(path, null)
 	};
 };
 
