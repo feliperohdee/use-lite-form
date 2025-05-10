@@ -367,7 +367,14 @@ describe('/form/instance', () => {
 
 			expect(listener).toHaveBeenCalledWith(
 				{
+					changed: false,
+					changesCount: 1,
 					errors: {},
+					errorsCount: 0,
+					form: instance,
+					lastChange: expect.any(Number),
+					lastSubmit: expect.any(Number),
+					requiredErrorsCount: 0,
 					value: { name: 'test' }
 				},
 				false

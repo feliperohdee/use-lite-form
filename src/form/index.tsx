@@ -23,20 +23,10 @@ import Instance from '@/form/instance';
 import Item from '@/form/item';
 import List from '@/form/list';
 import useForm from '@/form/use-form';
+import useFormInstance from '@/form/use-form-instance';
 import util from '@/form/util';
 
 namespace Form {
-	export type Payload = {
-		errors: Instance.Errors;
-		errorsCount: number;
-		form: Instance;
-		requiredErrorsCount: number;
-		value: Instance.Value;
-	};
-	export type ChangePayload = Payload;
-	export type InitPayload = Payload;
-	export type SubmitPayload = Payload;
-
 	export interface Props extends Omit<PropsWithChildren<HTMLAttributes<HTMLElement>>, 'onChange' | 'onSubmit'> {
 		as?: ElementType;
 		children: ReactNode;
@@ -44,9 +34,9 @@ namespace Form {
 		form?: Instance;
 		implicit?: boolean;
 		locked?: boolean;
-		onChange?: (payload: ChangePayload) => void;
-		onInit?: (payload: InitPayload) => void;
-		onSubmit?: (payload: SubmitPayload) => void;
+		onChange?: (payload: Instance.Payload) => void;
+		onInit?: (payload: Instance.Payload) => void;
+		onSubmit?: (payload: Instance.Payload) => void;
 		ref?: ForwardedRef<HTMLElement>;
 		value?: Instance.Value;
 	}
@@ -54,8 +44,8 @@ namespace Form {
 	export type Error = Instance.Error;
 	export type Errors = Instance.Errors;
 	export type Path = Instance.Path;
+	export type Payload = Instance.Payload;
 	export type Value = Instance.Value;
-
 	export type ValueProps = {
 		path: Path;
 		children: (value: Instance.Value) => ReactNode;
@@ -105,62 +95,36 @@ const Form = ({
 		}
 	};
 
-	const [state, setState] = useState({
-		contextValue: {
-			form: form.current,
-			locked,
-			submit: (e: FormEvent<HTMLFormElement> | KeyboardEvent<HTMLElement>) => {
-				e.preventDefault();
-			}
-		},
-		errors: form.current.errors,
-		value: form.current.value
+	const [contextState, setContextState] = useState({
+		form: form.current,
+		locked,
+		submit: (e: FormEvent<HTMLFormElement> | KeyboardEvent<HTMLElement>) => {
+			e.preventDefault();
+		}
 	});
 
 	// Update context when locked prop changes
 	useEffect(() => {
-		setState(prevState => {
+		setContextState(state => {
 			return {
-				...prevState,
-				contextValue: {
-					...prevState.contextValue,
-					locked
-				}
+				...state,
+				locked
 			};
 		});
 	}, [locked]);
 
 	// Form change handler
 	const handleChange = useCallback(
-		(
-			{
-				errors,
-				value
-			}: {
-				errors: Instance.Errors;
-				value: Instance.Value;
-			},
-			silent = false
-		) => {
+		(payload: Instance.Payload, silent = false) => {
 			// force context consumers to update
-			setState(prevState => {
+			setContextState(state => {
 				return {
-					contextValue: {
-						...prevState.contextValue
-					},
-					errors,
-					value
+					...state
 				};
 			});
 
 			if (!silent && isFunction(onChange)) {
-				onChange({
-					errors,
-					errorsCount: form.current.errorsCount(),
-					form: form.current,
-					requiredErrorsCount: form.current.requiredErrorsCount(),
-					value
-				});
+				onChange(payload);
 			}
 		},
 		[onChange]
@@ -189,13 +153,7 @@ const Form = ({
 				form.current.requestImmediateValue();
 				form.current.lastSubmit = now();
 
-				onSubmit({
-					errors: form.current.errors,
-					errorsCount: form.current.errorsCount(),
-					form: form.current,
-					requiredErrorsCount: form.current.requiredErrorsCount(),
-					value: form.current.value
-				});
+				onSubmit(form.current.getPayload());
 			}
 		},
 		[onSubmit]
@@ -203,13 +161,10 @@ const Form = ({
 
 	// Update context when submit handler changes
 	useEffect(() => {
-		setState(state => {
+		setContextState(state => {
 			return {
 				...state,
-				contextValue: {
-					...state.contextValue,
-					submit: handleSubmit
-				}
+				submit: handleSubmit
 			};
 		});
 	}, [handleSubmit]);
@@ -239,13 +194,7 @@ const Form = ({
 	// Handle form init
 	useEffect(() => {
 		if (isFunction(onInit)) {
-			onInit({
-				errors: form.current.errors,
-				errorsCount: form.current.errorsCount(),
-				form: form.current,
-				requiredErrorsCount: form.current.requiredErrorsCount(),
-				value: form.current.value
-			});
+			onInit(form.current.getPayload());
 		}
 	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -263,15 +212,12 @@ const Form = ({
 	);
 
 	const formChildren = util.renderChildren(children, null, {
-		errorsCount: form.current.errorsCount(),
-		form: form.current,
-		requiredErrorsCount: form.current.requiredErrorsCount(),
-		submit: handleSubmit,
-		value: form.current.value
+		...form.current.getPayload(),
+		submit: handleSubmit
 	});
 
 	if (implicit) {
-		return <context.Provider value={state.contextValue}>{formChildren}</context.Provider>;
+		return <context.Provider value={contextState}>{formChildren}</context.Provider>;
 	}
 
 	const formProps: any = {
@@ -286,7 +232,7 @@ const Form = ({
 		formProps.onKeyDown = handleEmulateSubmit;
 	}
 
-	return <context.Provider value={state.contextValue}>{createElement(as, formProps, formChildren)}</context.Provider>;
+	return <context.Provider value={contextState}>{createElement(as, formProps, formChildren)}</context.Provider>;
 };
 
 const dispatchSubmit = (element: HTMLElement | null) => {
@@ -341,6 +287,7 @@ Form.Item = Item;
 Form.List = List;
 Form.Submit = Submit;
 Form.useForm = useForm;
+Form.useFormInstance = useFormInstance;
 Form.Value = Value;
 
 export default Form;

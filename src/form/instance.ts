@@ -71,14 +71,27 @@ namespace Instance {
 		[key: string]: Errors | Error | Error[];
 	};
 
+	export type Payload<T extends object = Value, V = Nil> = {
+		changed: boolean;
+		changesCount: number;
+		errors: Instance.Errors;
+		errorsCount: number;
+		form: Instance<T>;
+		lastChange: number;
+		lastSubmit: number;
+		requiredErrorsCount: number;
+		value: V extends Nil ? T : V;
+	};
+
+	export type Nil = null | undefined;
 	export type Path = (string | number)[];
 	export type RegisteredItem = {
 		id: string;
 		reportFormImmediate: () => void;
 	};
 
-	export type Listener = {
-		(data: { errors: Errors; value: Instance.Value }, silent: boolean): void;
+	export type Listener<T extends object = Value> = {
+		(payload: Payload<T>, silent: boolean): void;
 	};
 	export type Value = any;
 }
@@ -118,7 +131,7 @@ class RequiredErrors extends Set<string> {
 	}
 }
 
-class Instance<T extends object = any> {
+class Instance<T extends object = Instance.Value> {
 	private static index = 0;
 	private cache: {
 		error: { [key: string]: Instance.Error };
@@ -183,9 +196,11 @@ class Instance<T extends object = any> {
 		this.triggerOnChange({ silent });
 	}
 
-	get(path?: Instance.Path, defaultValue?: Instance.Value): Instance.Value {
-		if (!path) {
-			return this.value;
+	get(path?: Instance.Nil, defaultValue?: Instance.Nil): T;
+	get<V extends Instance.Value = Instance.Value>(path?: Instance.Path, defaultValue?: Instance.Value): V;
+	get<V extends Instance.Value = Instance.Value>(path: Instance.Path | Instance.Nil, defaultValue?: Instance.Value | Instance.Nil): V | T {
+		if (isNil(path)) {
+			return this.value as T;
 		}
 
 		const cacheValue = this.cacheGet('get', path);
@@ -219,6 +234,20 @@ class Instance<T extends object = any> {
 		return value;
 	}
 
+	getPayload(): Instance.Payload<T> {
+		return {
+			changed: this.changed,
+			changesCount: this.changesCount,
+			errors: this.errors,
+			errorsCount: this.errorsCount(),
+			form: this,
+			lastChange: this.lastChange,
+			lastSubmit: this.lastSubmit,
+			requiredErrorsCount: this.requiredErrorsCount(),
+			value: this.value
+		};
+	}
+
 	errorsCount(): number {
 		return size(this.errors);
 	}
@@ -235,7 +264,7 @@ class Instance<T extends object = any> {
 		};
 	}
 
-	patch(value: Partial<Instance.Value>, silent: boolean = false): void {
+	patch(value: Partial<T>, silent: boolean = false): void {
 		this.value = {
 			...this.value,
 			...value
@@ -247,7 +276,7 @@ class Instance<T extends object = any> {
 		this.items.add(item);
 	}
 
-	replace(value: Instance.Value, silent: boolean = false): void {
+	replace(value: T, silent: boolean = false): void {
 		this.value = value;
 		this.triggerOnChange({ silent });
 	}
@@ -264,7 +293,7 @@ class Instance<T extends object = any> {
 		return this.requiredErrors.size;
 	}
 
-	set(path: Instance.Path, value: Instance.Value, silent: boolean = false): Instance.Value {
+	set(path: Instance.Path, value: Instance.Value, silent: boolean = false): T {
 		this.value = set(cloneDeep(this.value), path, value);
 		this.triggerOnChange({ silent });
 
@@ -308,14 +337,10 @@ class Instance<T extends object = any> {
 		}
 
 		this.changesCount += 1;
+
+		const payload = this.getPayload();
 		this.onChangeListeners.forEach(listener => {
-			listener(
-				{
-					errors: this.errors,
-					value: this.value
-				},
-				silent
-			);
+			listener(payload, silent);
 		});
 	}, 10);
 
@@ -331,7 +356,7 @@ class Instance<T extends object = any> {
 		return this.errors;
 	}
 
-	update(path: Instance.Path, fn: (value: Instance.Value) => Instance.Value, silent: boolean = false): Instance.Value {
+	update(path: Instance.Path, fn: (value: Instance.Value) => Instance.Value, silent: boolean = false): T {
 		if (!isFunction(fn)) {
 			return this.value;
 		}

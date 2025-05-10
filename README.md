@@ -180,6 +180,24 @@ const MyComponent = () => {
 };
 ```
 
+### `Form.useFormInstance(initialValue?: object)`
+
+Hook to create a new form instance.
+
+```jsx
+const MyComponent = () => {
+	const { form, value } = Form.useFormInstance({ name: 'Felipe' });
+
+	// Access specific path value
+	console.log(value.name);
+
+	// Call form methods
+	form.set(['user', 'name'], 'New Value');
+
+	return <div>...</div>;
+};
+```
+
 ## 🎯 Advanced Usage
 
 ### Custom Validation

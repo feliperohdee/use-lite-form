@@ -34,9 +34,13 @@ describe('/form', () => {
 		);
 
 		expect(onInit).toHaveBeenCalledWith({
+			changed: false,
+			changesCount: 0,
 			errors: {},
 			errorsCount: 0,
 			form: expect.any(Form.Instance),
+			lastChange: expect.any(Number),
+			lastSubmit: expect.any(Number),
 			requiredErrorsCount: 0,
 			value: {
 				name: 'Felipe Rohde'
@@ -69,9 +73,13 @@ describe('/form', () => {
 		fireEvent.click(screen.getByTestId('submit'));
 
 		expect(onSubmit).toHaveBeenCalledWith({
+			changed: false,
+			changesCount: 0,
 			errors: {},
 			errorsCount: 0,
 			form: expect.any(Form.Instance),
+			lastChange: expect.any(Number),
+			lastSubmit: expect.any(Number),
 			requiredErrorsCount: 0,
 			value: { name: 'Felipe Rohde' }
 		});
@@ -108,9 +116,13 @@ describe('/form', () => {
 		fireEvent.click(screen.getByTestId('submit'));
 
 		expect(onSubmit).toHaveBeenCalledWith({
+			changed: false,
+			changesCount: 0,
 			errors: {},
 			errorsCount: 0,
 			form: expect.any(Form.Instance),
+			lastChange: expect.any(Number),
+			lastSubmit: expect.any(Number),
 			requiredErrorsCount: 0,
 			value: { name: 'Felipe Rohde' }
 		});
@@ -137,9 +149,13 @@ describe('/form', () => {
 		Form.dispatchSubmit(formRef.current);
 
 		expect(onSubmit).toHaveBeenCalledWith({
+			changed: false,
+			changesCount: 0,
 			errors: {},
 			errorsCount: 0,
 			form: expect.any(Form.Instance),
+			lastChange: expect.any(Number),
+			lastSubmit: expect.any(Number),
 			requiredErrorsCount: 0,
 			value: { name: 'Felipe Rohde' }
 		});
@@ -169,9 +185,13 @@ describe('/form', () => {
 		fireEvent.click(screen.getByTestId('submit'));
 
 		expect(onSubmit).toHaveBeenCalledWith({
+			changed: false,
+			changesCount: 0,
 			errors: { name: 'Required Field.' },
 			errorsCount: 1,
 			form: expect.any(Form.Instance),
+			lastChange: expect.any(Number),
+			lastSubmit: expect.any(Number),
 			requiredErrorsCount: 1,
 			value: { name: '' }
 		});
@@ -208,9 +228,13 @@ describe('/form', () => {
 		fireEvent.click(screen.getByTestId('submit'));
 
 		expect(onSubmit).toHaveBeenCalledWith({
+			changed: false,
+			changesCount: 0,
 			errors: { name: 'Name must be at least 3 characters' },
 			errorsCount: 1,
 			form: expect.any(Form.Instance),
+			lastChange: expect.any(Number),
+			lastSubmit: expect.any(Number),
 			requiredErrorsCount: 1,
 			value: { name: 'ab' }
 		});
@@ -242,9 +266,13 @@ describe('/form', () => {
 
 		fireEvent.click(screen.getByTestId('submit'));
 		expect(onSubmit).toHaveBeenCalledWith({
+			changed: false,
+			changesCount: 0,
 			errors: { name: 'Required Field.' },
 			errorsCount: 1,
 			form: expect.any(Form.Instance),
+			lastChange: expect.any(Number),
+			lastSubmit: expect.any(Number),
 			requiredErrorsCount: 1,
 			value: { name: '' }
 		});
@@ -256,9 +284,13 @@ describe('/form', () => {
 		fireEvent.click(screen.getByTestId('submit'));
 
 		expect(onSubmit).toHaveBeenCalledWith({
+			changed: false,
+			changesCount: 0,
 			errors: {},
 			errorsCount: 0,
 			form: expect.any(Form.Instance),
+			lastChange: expect.any(Number),
+			lastSubmit: expect.any(Number),
 			requiredErrorsCount: 0,
 			value: { name: 'Felipe Rohde' }
 		});
@@ -334,9 +366,13 @@ describe('/form', () => {
 
 			fireEvent.click(screen.getByTestId('submit'));
 			expect(onSubmit).toHaveBeenCalledWith({
+				changed: true,
+				changesCount: 2,
 				errors: {},
 				errorsCount: 0,
 				form: expect.any(Form.Instance),
+				lastChange: expect.any(Number),
+				lastSubmit: expect.any(Number),
 				requiredErrorsCount: 0,
 				value: {
 					items: [{ name: '' }, { name: '' }]

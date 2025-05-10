@@ -3,12 +3,12 @@ import { useContext } from 'react';
 import FormContext from '@/form/context';
 import Instance from '@/form/instance';
 
-type UseFormResult<T = any> = {
-	form: Instance;
-	value: T;
+type UseForm = {
+	<T extends object = any>(): Instance.Payload<T>;
+	<V = any, T extends object = any>(path: Instance.Path): Instance.Payload<T, V>;
 };
 
-const useForm = <T = any>(path?: Instance.Path): UseFormResult<T> => {
+const useForm: UseForm = <V = Instance.Nil, T extends object = Instance.Value>(path?: Instance.Path): Instance.Payload<T, V> => {
 	const { form } = useContext(FormContext);
 
 	if (!form) {
@@ -16,8 +16,8 @@ const useForm = <T = any>(path?: Instance.Path): UseFormResult<T> => {
 	}
 
 	return {
-		form,
-		value: form.get(path, null) as T
+		...form.getPayload(),
+		value: form.get(path, null)
 	};
 };
 
