@@ -252,13 +252,15 @@ class Instance<T extends object = Instance.Value> {
 		};
 	}
 
-	init(value: T, silent: boolean = false): void {
+	init(value: T, silent: boolean = false): boolean {
 		if (size(this.value) > 0) {
-			return;
+			return false;
 		}
 
 		this.value = value;
 		this.triggerOnChange({ silent });
+
+		return true;
 	}
 
 	onChange(listener: Instance.Listener): () => void {
