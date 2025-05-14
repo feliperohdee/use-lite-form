@@ -313,6 +313,10 @@ const Item = forwardRef(
 					return;
 				}
 
+				if (reportFormDelayed.current?.cancel) {
+					reportFormDelayed.current.cancel();
+				}
+
 				value = getValueFromEvent.current(value);
 
 				if (value && value.target instanceof EventTarget && !isUndefined(value.target)) {
@@ -324,10 +328,6 @@ const Item = forwardRef(
 				}
 
 				userInputPendingReport.current = true;
-
-				if (reportFormDelayed.current?.cancel) {
-					reportFormDelayed.current.cancel();
-				}
 
 				innerStateRef.current.value = value;
 				setState(state => {
