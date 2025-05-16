@@ -38,6 +38,7 @@ namespace Item {
 			| ((data: {
 					value: Instance.Value;
 			  }) => string | boolean | { path: Instance.Path; error: string | boolean }[] | { path: Instance.Path; error: string | boolean });
+		resetDelay?: number;
 		transform?: (input: { instance: Instance; prevValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => Instance.Value;
 		transformIn?: (input: { instance: Instance; prevValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => Instance.Value;
 		transformOut?: (input: { instance: Instance; prevValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => Instance.Value;
@@ -73,6 +74,7 @@ const Item = forwardRef(
 			onChangeProperty = 'onChange',
 			path: propPath,
 			required: propRequired,
+			resetDelay = 100,
 			transform,
 			transformIn,
 			transformOut,
@@ -189,7 +191,9 @@ const Item = forwardRef(
 			}
 
 			instance.set(path.current, transformed, false);
-			userInputPendingReport.current = false;
+			setTimeout(() => {
+				userInputPendingReport.current = false;
+			}, resetDelay);
 
 			if (required.current) {
 				if (isFunction(required.current)) {
@@ -328,7 +332,6 @@ const Item = forwardRef(
 				}
 
 				userInputPendingReport.current = true;
-
 				innerStateRef.current.value = value;
 				setState(state => {
 					return {
