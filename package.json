@@ -42,7 +42,7 @@
 		"test": "vitest",
 		"test:coverage": "vitest --coverage"
 	},
-	"version": "1.0.39",
+	"version": "1.0.40",
 	"dependencies": {
 		"clsx": "^2.1.1",
 		"lodash": "^4.17.21"

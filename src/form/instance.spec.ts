@@ -367,7 +367,7 @@ describe('/form/instance', () => {
 
 			expect(listener).toHaveBeenCalledWith(
 				{
-					changed: false,
+					changed: true,
 					changesCount: 1,
 					errors: {},
 					errorsCount: 0,

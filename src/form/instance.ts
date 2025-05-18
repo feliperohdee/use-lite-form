@@ -343,11 +343,8 @@ class Instance<T extends object = Instance.Value> {
 	triggerOnChangeDebounced = debounce((args: { silent?: boolean }) => {
 		const { silent = false } = args;
 
-		if (this.changesCount > 0) {
-			this.changed = this.lastChange > this.lastSubmit;
-		}
-
 		this.changesCount += 1;
+		this.changed = this.lastChange > this.lastSubmit;
 
 		const payload = this.getPayload();
 		this.onChangeListeners.forEach(listener => {
