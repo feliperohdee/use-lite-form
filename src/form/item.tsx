@@ -97,21 +97,21 @@ const Item = forwardRef(
 			if (isFunction(effect)) {
 				effect({
 					instance,
-					prevValue: instance.get(path.current, defaultValue),
-					path: path.current,
+					prevValue: instance.get(pathRef.current, defaultValue),
+					path: pathRef.current,
 					value
 				});
 			}
 		});
 
 		const transformInRef = useRef((): Instance.Value => {
-			const value = instance.get(path.current, defaultValue);
+			const value = instance.get(pathRef.current, defaultValue);
 
 			if (isFunction(transformIn)) {
 				const newValue = transformIn({
 					instance,
-					prevValue: instance.get(path.current, defaultValue),
-					path: path.current,
+					prevValue: instance.get(pathRef.current, defaultValue),
+					path: pathRef.current,
 					value
 				});
 
@@ -125,11 +125,11 @@ const Item = forwardRef(
 
 		const transformOutRef = useRef((value: Instance.Value): Instance.Value => {
 			if (isFunction(transformOut)) {
-				const prevValue = instance.get(path.current, defaultValue);
+				const prevValue = instance.get(pathRef.current, defaultValue);
 				const newValue = transformOut({
 					instance,
 					prevValue,
-					path: path.current,
+					path: pathRef.current,
 					value
 				});
 
@@ -145,8 +145,8 @@ const Item = forwardRef(
 			if (isFunction(transform)) {
 				const newValue = transform({
 					instance,
-					prevValue: instance.get(path.current, defaultValue),
-					path: path.current,
+					prevValue: instance.get(pathRef.current, defaultValue),
+					path: pathRef.current,
 					value
 				});
 
@@ -170,15 +170,15 @@ const Item = forwardRef(
 			return value;
 		});
 
-		const id = useRef(propId || `form-item-${itemIndex++}`);
-		const item = useRef<Instance.RegisteredItem>(null);
-		const path = useRef(propPath);
-		const reportFormDelayed = useRef<(() => void) & { cancel?: () => void }>(null);
-		const required = useRef(propRequired);
-		const userInputPendingReport = useRef(false);
+		const idRef = useRef(propId || `form-item-${itemIndex++}`);
+		const itemRef = useRef<Instance.RegisteredItem>(null);
+		const pathRef = useRef(propPath);
+		const reportFormDelayedRef = useRef<(() => void) & { cancel?: () => void }>(null);
+		const requiredRef = useRef(propRequired);
+		const userInputPendingReportRef = useRef(false);
 
 		const innerStateRef = useRef<Item.State>({
-			error: instance.getError(path.current),
+			error: instance.getError(pathRef.current),
 			value: transformInRef.current()
 		});
 
@@ -190,14 +190,14 @@ const Item = forwardRef(
 				effectRef.current(transformed);
 			}
 
-			instance.set(path.current, transformed, false);
+			instance.set(pathRef.current, transformed, false);
 			setTimeout(() => {
-				userInputPendingReport.current = false;
+				userInputPendingReportRef.current = false;
 			}, resetDelay);
 
-			if (required.current) {
-				if (isFunction(required.current)) {
-					const requiredError = required.current({
+			if (requiredRef.current) {
+				if (isFunction(requiredRef.current)) {
+					const requiredError = requiredRef.current({
 						value: trimString(innerStateRef.current.value)
 					});
 
@@ -222,32 +222,32 @@ const Item = forwardRef(
 							return;
 						}
 
-						instance.setError(path.current, isString(requiredError) ? requiredError : 'Required Field.', false, true);
+						instance.setError(pathRef.current, isString(requiredError) ? requiredError : 'Required Field.', false, true);
 						return;
 					}
 				} else if (trimString(innerStateRef.current.value) === emptyValue) {
-					instance.setError(path.current, 'Required Field.', false, true);
+					instance.setError(pathRef.current, 'Required Field.', false, true);
 					return;
 				}
 			}
 
-			instance.unsetError(path.current);
+			instance.unsetError(pathRef.current);
 		});
 
 		// effect to setup form, runs once
 		useEffect(() => {
 			if (debounceTime && debounceTime > 0) {
-				reportFormDelayed.current = debounce(reportForm.current, debounceTime);
+				reportFormDelayedRef.current = debounce(reportForm.current, debounceTime);
 			} else {
-				reportFormDelayed.current = reportForm.current;
+				reportFormDelayedRef.current = reportForm.current;
 			}
 
-			if (!item.current) {
-				item.current = {
-					id: id.current,
+			if (!itemRef.current) {
+				itemRef.current = {
+					id: idRef.current,
 					reportFormImmediate: () => {
-						if (reportFormDelayed.current?.cancel) {
-							reportFormDelayed.current.cancel();
+						if (reportFormDelayedRef.current?.cancel) {
+							reportFormDelayedRef.current.cancel();
 						}
 
 						reportForm.current();
@@ -255,24 +255,35 @@ const Item = forwardRef(
 				};
 			}
 
-			instance.registerItem(item.current);
+			instance.registerItem(itemRef.current);
 
 			return () => {
-				if (reportFormDelayed.current?.cancel) {
-					reportFormDelayed.current.cancel();
+				if (reportFormDelayedRef.current?.cancel) {
+					reportFormDelayedRef.current.cancel();
 				}
 
-				if (item.current) {
-					instance.unregisterItem(item.current);
+				if (itemRef.current) {
+					instance.unregisterItem(itemRef.current);
 				}
 			};
 		}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+		// update path
 		useEffect(() => {
-			const error = instance.getError(path.current);
+			pathRef.current = propPath;
+		}, [propPath]);
+
+		// update required
+		useEffect(() => {
+			requiredRef.current = propRequired;
+		}, [propRequired]);
+
+		// update error or error and value when user input is not pending to report
+		useEffect(() => {
+			const error = instance.getError(pathRef.current);
 
 			// when user input is pending to report (means there are changes in the value), we just update the error
-			if (userInputPendingReport.current) {
+			if (userInputPendingReportRef.current) {
 				if (!isEqual(error, innerStateRef.current.error)) {
 					innerStateRef.current.error = error;
 					setState(state => {
@@ -301,24 +312,14 @@ const Item = forwardRef(
 			}
 		}, [instance, instance.lastChange]);
 
-		// update path
-		useEffect(() => {
-			path.current = propPath;
-		}, [propPath]);
-
-		// update required
-		useEffect(() => {
-			required.current = propRequired;
-		}, [propRequired]);
-
 		const handleChange = useCallback(
 			(value: Instance.Value | React.ChangeEvent) => {
 				if (locked) {
 					return;
 				}
 
-				if (reportFormDelayed.current?.cancel) {
-					reportFormDelayed.current.cancel();
+				if (reportFormDelayedRef.current?.cancel) {
+					reportFormDelayedRef.current.cancel();
 				}
 
 				value = getValueFromEvent.current(value);
@@ -331,7 +332,7 @@ const Item = forwardRef(
 					}
 				}
 
-				userInputPendingReport.current = true;
+				userInputPendingReportRef.current = true;
 				innerStateRef.current.value = value;
 				setState(state => {
 					return {
@@ -340,8 +341,8 @@ const Item = forwardRef(
 					};
 				});
 
-				if (reportFormDelayed.current) {
-					reportFormDelayed.current();
+				if (reportFormDelayedRef.current) {
+					reportFormDelayedRef.current();
 				}
 			},
 			[locked, file, valueProperty]
@@ -349,7 +350,7 @@ const Item = forwardRef(
 
 		const childrenProps = {
 			'data-error': state.error,
-			'data-id': id.current,
+			'data-id': idRef.current,
 			[onChangeProperty]: handleChange,
 			[valueProperty]: file ? null : transformRef.current(state.value),
 			ref
@@ -357,7 +358,7 @@ const Item = forwardRef(
 
 		return util.renderChildren(children, childrenProps, {
 			error: state.error,
-			id: id.current,
+			id: idRef.current,
 			onChange: handleChange,
 			value: state.value
 		});
