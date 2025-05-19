@@ -266,7 +266,7 @@ const List = ({
 
 	return (
 		<listContext.Provider value={contextValue}>
-			{util.renderChildren(children, {
+			{util.renderChildren(children, null, {
 				add: (value: Instance.Value, index = -1) => {
 					if (!canAdd) {
 						return;

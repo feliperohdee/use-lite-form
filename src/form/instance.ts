@@ -1,6 +1,6 @@
 import cloneDeep from 'lodash/cloneDeep';
 import debounce from 'lodash/debounce';
-import forEach from 'lodash/forEach';
+import every from 'lodash/every';
 import get from 'lodash/get';
 import isArray from 'lodash/isArray';
 import isEmpty from 'lodash/isEmpty';
@@ -10,59 +10,134 @@ import isObject from 'lodash/isObject';
 import isPlainObject from 'lodash/isPlainObject';
 import isString from 'lodash/isString';
 import isUndefined from 'lodash/isUndefined';
+import keys from 'lodash/keys';
+import map from 'lodash/map';
 import now from 'lodash/now';
-import omitBy from 'lodash/omitBy';
 import set from 'lodash/set';
 import size from 'lodash/size';
+import values from 'lodash/values';
 
-const deepClean = (obj: any): any => {
-	// avoid mutating the original object
-	const clone = cloneDeep(obj);
+const deepClean = (obj: any, isRoot: boolean = true): any => {
+	// Special case for empty objects/arrays at root level
+	if (isRoot && ((isArray(obj) && size(obj) === 0) || (isPlainObject(obj) && size(obj) === 0))) {
+		return obj;
+	}
 
 	// Handle null/undefined input
-	if (isNil(clone)) {
-		return clone;
+	if (isNil(obj)) {
+		return obj;
 	}
 
 	// Process arrays
-	if (isArray(clone)) {
-		// First clean each array item recursively
-		const processed = clone
-			.map(item => {
-				return isObject(item) ? deepClean(item) : item;
-			})
-			// Then filter out null/undefined values
-			.filter(item => {
-				return !isNil(item);
-			});
+	if (isArray(obj)) {
+		// Clean each array item recursively
+		const processed = map(obj, item => {
+			// Keep null/undefined as is to preserve indices
+			if (isNil(item)) {
+				return item;
+			}
 
-		// Return null if array is empty after processing
-		return size(processed) > 0 ? processed : null;
+			// Process objects recursively
+			if (isObject(item)) {
+				return deepClean(item, false);
+			}
+
+			// Return primitive values as is
+			return item;
+		});
+
+		// If all items are null/undefined or if array is empty (and not root)
+		const allNil = every(processed, isNil);
+
+		if (!isRoot && (allNil || size(processed) === 0)) {
+			return null;
+		}
+
+		// Return the processed array
+		return processed;
 	}
 
 	// Process objects
-	if (isPlainObject(clone)) {
-		// Process each property recursively
-		forEach(clone, (value, key) => {
-			if (isObject(value)) {
-				clone[key] = deepClean(value);
+	if (isPlainObject(obj)) {
+		// Process each property
+		for (const key of keys(obj)) {
+			const value = obj[key];
 
-				// If the result is null after processing, remove the property
-				if (isNil(clone[key])) {
-					delete clone[key];
+			// Remove null/undefined values
+			if (isNil(value)) {
+				delete obj[key];
+				continue;
+			}
+
+			// Special case for empty objects - delete them
+			if (isPlainObject(value) && isEmpty(value)) {
+				delete obj[key];
+				continue;
+			}
+
+			// Special case for empty arrays or arrays with only null/undefined
+			if (isArray(value)) {
+				if (isEmpty(value)) {
+					// Empty arrays become null
+					obj[key] = null;
+					continue;
+				} else if (every(value, isNil)) {
+					// Arrays with only null/undefined become null
+					obj[key] = null;
+					continue;
 				}
 			}
-		});
 
-		// Use omitBy to remove all null/undefined values
-		const result = omitBy(clone, isNil);
+			// Process nested objects and arrays
+			if (isObject(value)) {
+				const cleaned = deepClean(value, false);
 
-		// Return null if object is empty after processing
-		return !isEmpty(result) ? result : null;
+				if (isNil(cleaned)) {
+					// If the cleaned result is null, delete the property
+					delete obj[key];
+				} else if (isArray(cleaned) && every(cleaned, isNil)) {
+					// Arrays with all null values after cleaning become null
+					obj[key] = null;
+				} else if (isPlainObject(cleaned)) {
+					// Handle empty objects
+					if (isEmpty(cleaned)) {
+						delete obj[key];
+					} else {
+						// Check if object only contains null values
+						const hasOnlyNullValues = every(values(cleaned), isNil);
+
+						if (hasOnlyNullValues && size(cleaned) > 0) {
+							delete obj[key];
+						} else {
+							obj[key] = cleaned;
+						}
+					}
+				} else {
+					// Keep the cleaned value
+					obj[key] = cleaned;
+				}
+			}
+		}
+
+		// Check if object only contains null values after processing
+		const hasOnlyNullValues = every(values(obj), isNil);
+
+		// If all values are null and not at root level, return null
+		if (!isRoot && hasOnlyNullValues && size(obj) > 0) {
+			return null;
+		}
+
+		// If object is now empty and not root, return null
+		if (!isRoot && isEmpty(obj)) {
+			return null;
+		}
+
+		// Return the processed object
+		return obj;
 	}
 
 	// Return primitive values as is
-	return clone;
+	return obj;
 };
 
 namespace Instance {
@@ -357,7 +432,7 @@ class Instance<T extends object = Instance.Value> {
 	}
 
 	unsetError(path: Instance.Path, silent: boolean = false): Instance.Errors {
-		this.errors = deepClean(set(this.errors, path, null)) || {};
+		this.errors = deepClean(set(cloneDeep(this.errors), path, null));
 		this.requiredErrors.remove(path);
 		this.triggerOnChange({ silent });
 

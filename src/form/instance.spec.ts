@@ -461,12 +461,21 @@ describe('/form/instance', () => {
 	});
 
 	describe('deepClean', () => {
-		it('should remove null and undefined values from an object', () => {
+		it('should handle empty object', () => {
+			expect(deepClean([])).toEqual([]);
+		});
+
+		it('should handle empty object', () => {
+			expect(deepClean({})).toEqual({});
+		});
+
+		it('should remove null, undefined and empty objects values from an object', () => {
 			const input = {
 				a: 1,
 				b: null,
 				c: undefined,
-				d: 'value'
+				d: 'value',
+				e: {}
 			};
 
 			const expected = {
@@ -481,21 +490,24 @@ describe('/form/instance', () => {
 			const input = {
 				a: 1,
 				b: {
-					c: null,
-					d: 'value',
-					e: {
-						f: undefined,
-						g: 2
+					a: null,
+					b: 'value',
+					c: {
+						a: undefined,
+						b: 2
 					}
+				},
+				c: {
+					a: [{ a: null }]
 				}
 			};
 
 			const expected = {
 				a: 1,
 				b: {
-					d: 'value',
-					e: {
-						g: 2
+					b: 'value',
+					c: {
+						b: 2
 					}
 				}
 			};
@@ -511,21 +523,9 @@ describe('/form/instance', () => {
 			};
 
 			const expected = {
-				b: [1, 2, 3]
-			};
-
-			expect(deepClean(input)).toEqual(expected);
-		});
-
-		it('should remove empty objects', () => {
-			const input = {
-				a: {},
-				b: { c: 1 },
-				d: { e: {} }
-			};
-
-			const expected = {
-				b: { c: 1 }
+				a: null,
+				b: [1, 2, 3],
+				c: null
 			};
 
 			expect(deepClean(input)).toEqual(expected);
@@ -535,19 +535,43 @@ describe('/form/instance', () => {
 			const input = {
 				a: 1,
 				b: null,
-				c: [{ d: null, e: 2 }, null, { f: undefined, g: {} }],
-				h: { i: undefined, j: [] }
+				c: [
+					{
+						a: null,
+						b: 2
+					},
+					null,
+					{ c: undefined, d: {} },
+					{ e: 3 },
+					{ f: null }
+				],
+				d: {
+					e: [
+						{
+							a: null,
+							b: 2
+						},
+						null,
+						{ c: undefined, d: {} },
+						{ e: 3 },
+						{ f: null }
+					]
+				},
+				e: { i: undefined, j: [] }
 			};
 
 			const expected = {
 				a: 1,
-				c: [{ e: 2 }]
+				c: [{ b: 2 }, null, null, { e: 3 }, null],
+				d: {
+					e: [{ b: 2 }, null, null, { e: 3 }, null]
+				}
 			};
 
 			expect(deepClean(input)).toEqual(expected);
 		});
 
-		it('should return the original object if nothing to remove', () => {
+		it('should return equal object if nothing to remove', () => {
 			const input = {
 				a: 1,
 				b: 'test',
