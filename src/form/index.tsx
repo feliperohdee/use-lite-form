@@ -45,7 +45,7 @@ namespace Form {
 	export type Error = Instance.Error;
 	export type Errors = Instance.Errors;
 	export type Path = Instance.Path;
-	export type Payload = Instance.Payload;
+	export type Payload<T extends object = Instance.Value> = Instance.Payload<T>;
 	export type Value = Instance.Value;
 	export type ValueProps = {
 		path: Path;
