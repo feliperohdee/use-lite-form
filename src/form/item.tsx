@@ -25,6 +25,12 @@ namespace Item {
 	export type RenderFunction = (props: RenderProps) => ReactNode;
 	export type Props = {
 		children: ReactNode | RenderFunction;
+		childTransform?: (input: {
+			instance: Instance;
+			prevValue: Instance.Value;
+			path: Instance.Path;
+			value: Instance.Value;
+		}) => Instance.Value;
 		debounce?: number;
 		defaultValue?: Instance.Value;
 		effect?: (input: { instance: Instance; prevValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => void;
@@ -39,7 +45,6 @@ namespace Item {
 					value: Instance.Value;
 			  }) => string | boolean | { path: Instance.Path; error: string | boolean }[] | { path: Instance.Path; error: string | boolean });
 		resetDelay?: number;
-		transform?: (input: { instance: Instance; prevValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => Instance.Value;
 		transformIn?: (input: { instance: Instance; prevValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => Instance.Value;
 		transformOut?: (input: { instance: Instance; prevValue: Instance.Value; path: Instance.Path; value: Instance.Value }) => Instance.Value;
 		valueGetter?: (value: Instance.Value | React.ChangeEvent) => Instance.Value;
@@ -64,6 +69,7 @@ const trimString = (value: string): string => {
 const Item = forwardRef(
 	(
 		{
+			childTransform,
 			children,
 			debounce: debounceTime = 250,
 			defaultValue = '',
@@ -75,7 +81,6 @@ const Item = forwardRef(
 			path: propPath,
 			required: propRequired,
 			resetDelay = 100,
-			transform,
 			transformIn,
 			transformOut,
 			valueGetter,
@@ -92,6 +97,23 @@ const Item = forwardRef(
 		if (!isArray(propPath)) {
 			throw new Error(`"path" is required.`);
 		}
+
+		const childTransformRef = useRef((value: Instance.Value): Instance.Value => {
+			if (isFunction(childTransform)) {
+				const newValue = childTransform({
+					instance,
+					prevValue: instance.get(pathRef.current, defaultValue),
+					path: pathRef.current,
+					value
+				});
+
+				if (!isUndefined(newValue)) {
+					return newValue;
+				}
+			}
+
+			return value;
+		});
 
 		const effectRef = useRef((value: Instance.Value) => {
 			if (isFunction(effect)) {
@@ -129,23 +151,6 @@ const Item = forwardRef(
 				const newValue = transformOut({
 					instance,
 					prevValue,
-					path: pathRef.current,
-					value
-				});
-
-				if (!isUndefined(newValue)) {
-					return newValue;
-				}
-			}
-
-			return value;
-		});
-
-		const transformRef = useRef((value: Instance.Value): Instance.Value => {
-			if (isFunction(transform)) {
-				const newValue = transform({
-					instance,
-					prevValue: instance.get(pathRef.current, defaultValue),
 					path: pathRef.current,
 					value
 				});
@@ -352,7 +357,7 @@ const Item = forwardRef(
 			'data-error': state.error,
 			'data-id': idRef.current,
 			[onChangeProperty]: handleChange,
-			[valueProperty]: file ? null : transformRef.current(state.value),
+			[valueProperty]: file ? null : childTransformRef.current(state.value),
 			ref
 		};
 

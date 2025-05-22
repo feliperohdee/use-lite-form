@@ -118,13 +118,14 @@ Component for individual form fields.
 
 #### Props
 
-- `path`: Array path to the value in the form state
-- `required`: Boolean or function that validates if the field is required
-- `defaultValue`: Default value for the field
-- `debounce`: Debounce time in milliseconds (default: 250)
-- `transformIn`: Function to transform the value from form to view
-- `transformOut`: Function to transform the value from view to form
-- `effect`: Function called when the field value changes
+- `childTransform`: Transforms the value for the child component only, without affecting the form state
+- `path`: Array path specifying the location of this field's value within the form state
+- `required`: Boolean or validation function that determines if the field is required and returns error messages
+- `defaultValue`: Initial value used when the field has no value in the form state
+- `debounce`: Delay in milliseconds before reporting value changes to the form (default: 250ms)
+- `transformIn`: Transforms the value when reading from form state
+- `transformOut`: Transforms the value when writing to form state
+- `effect`: Side effect function executed whenever the field value changes in the form state
 
 ### `<Form.List>`
 

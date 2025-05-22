@@ -579,27 +579,33 @@ describe('/form', () => {
 			});
 		});
 
-		it('should apply transform when rendering value to component', async () => {
+		it('should apply childTransform when rendering value to component', async () => {
 			const initialValue = { price: 1000 };
-			const transform = vi.fn(({ value }) => `$${value.toFixed(2)}`);
+			const instance = new Form.Instance();
+			const childTransform = vi.fn(({ value }) => `$${value.toFixed(2)}`);
 
 			render(
-				<Form value={initialValue}>
+				<Form
+					instance={instance}
+					value={initialValue}
+				>
 					<Form.Item
+						childTransform={childTransform}
 						path={['price']}
-						transform={transform}
 					>
 						<input data-testid='price-input' />
 					</Form.Item>
 				</Form>
 			);
 
-			expect(transform).toHaveBeenCalledWith({
+			expect(childTransform).toHaveBeenCalledWith({
 				instance: expect.any(Form.Instance),
 				prevValue: 1000,
 				path: ['price'],
 				value: 1000
 			});
+
+			expect(instance.get(['price'])).toBe(1000);
 			expect((screen.getByTestId('price-input') as HTMLInputElement).value).toBe('$1000.00');
 		});
 
@@ -629,9 +635,9 @@ describe('/form', () => {
 			});
 		});
 
-		it('should handle transformIn, transform, and transformOut in combination', async () => {
+		it('should handle childTransform, transformIn, and transformOut in combination', async () => {
+			const childTransform = vi.fn(({ value }) => `$${value.toFixed(2)}`);
 			const transformIn = vi.fn(({ value }) => parseFloat(value));
-			const transform = vi.fn(({ value }) => `$${value.toFixed(2)}`);
 			const transformOut = vi.fn(({ value }) => value.toString());
 			const effect = vi.fn();
 			const onChange = vi.fn();
@@ -645,9 +651,9 @@ describe('/form', () => {
 					value={{ price: '99.99' }}
 				>
 					<Form.Item
+						childTransform={childTransform}
 						path={['price']}
 						transformIn={transformIn}
-						transform={transform}
 						transformOut={transformOut}
 						effect={effect}
 						debounce={0}
@@ -672,7 +678,7 @@ describe('/form', () => {
 				prevValue: '99.99',
 				value: '99.99'
 			});
-			expect(transform).toHaveBeenCalledWith({
+			expect(childTransform).toHaveBeenCalledWith({
 				instance: expect.any(Form.Instance),
 				path: ['price'],
 				prevValue: '99.99',
@@ -698,19 +704,21 @@ describe('/form', () => {
 				prevValue: '99.99',
 				value: '199.99'
 			});
+
+			expect(instance.get(['price'])).toBe('199.99');
 		});
 
 		it('should apply transformations with nested paths', async () => {
 			const initialValue = { user: { stats: { score: '750' } } };
+			const childTransform = vi.fn(({ value }) => `${value} points`);
 			const transformIn = vi.fn(({ value }) => parseInt(value, 10));
-			const transform = vi.fn(({ value }) => `${value} points`);
 
 			render(
 				<Form value={initialValue}>
 					<Form.Item
+						childTransform={childTransform}
 						path={['user', 'stats', 'score']}
 						transformIn={transformIn}
-						transform={transform}
 					>
 						<input data-testid='score-input' />
 					</Form.Item>
@@ -723,7 +731,7 @@ describe('/form', () => {
 				prevValue: '750',
 				value: '750'
 			});
-			expect(transform).toHaveBeenCalledWith({
+			expect(childTransform).toHaveBeenCalledWith({
 				instance: expect.any(Form.Instance),
 				path: ['user', 'stats', 'score'],
 				prevValue: '750',
@@ -785,16 +793,16 @@ describe('/form', () => {
 		});
 
 		it('should gracefully handle undefined returns from transform functions', async () => {
+			const childTransform = vi.fn(() => undefined);
 			const transformIn = vi.fn(() => undefined);
-			const transform = vi.fn(() => undefined);
 			const transformOut = vi.fn(() => undefined);
 
 			render(
 				<Form value={{ count: 10 }}>
 					<Form.Item
+						childTransform={childTransform}
 						path={['count']}
 						transformIn={transformIn}
-						transform={transform}
 						transformOut={transformOut}
 						debounce={0}
 					>
@@ -815,7 +823,7 @@ describe('/form', () => {
 				prevValue: 10,
 				value: 10
 			});
-			expect(transform).toHaveBeenCalledWith({
+			expect(childTransform).toHaveBeenCalledWith({
 				instance: expect.any(Form.Instance),
 				path: ['count'],
 				prevValue: 10,
@@ -842,6 +850,16 @@ describe('/form', () => {
 		it('should handle complex data transformation and normalization', async () => {
 			const initialValue = { user: { name: 'john doe', role: 'admin' } };
 
+			// Show user-friendly role names
+			const childTransform = vi.fn(({ value }) => {
+				const roles: Record<string, string> = {
+					admin: 'Administrator',
+					user: 'Regular User',
+					guest: 'Guest User'
+				};
+				return roles[value as string] || value;
+			});
+
 			// Transform input to title case
 			const transformIn = vi.fn(({ value }) => {
 				if (typeof value === 'string') {
@@ -851,16 +869,6 @@ describe('/form', () => {
 						.join(' ');
 				}
 				return value;
-			});
-
-			// Show user-friendly role names
-			const transform = vi.fn(({ value }) => {
-				const roles: Record<string, string> = {
-					admin: 'Administrator',
-					user: 'Regular User',
-					guest: 'Guest User'
-				};
-				return roles[value as string] || value;
 			});
 
 			// Normalize role values to database format
@@ -884,9 +892,9 @@ describe('/form', () => {
 					</Form.Item>
 
 					<Form.Item
+						childTransform={childTransform}
 						path={['user', 'role']}
 						transformIn={transformIn}
-						transform={transform}
 						transformOut={transformOut}
 						debounce={0}
 					>
@@ -898,13 +906,13 @@ describe('/form', () => {
 			// Check initial transformed values
 			expect((screen.getByTestId('name-input') as HTMLInputElement).value).toBe('John Doe');
 
-			expect(transform).toHaveBeenCalledWith({
+			expect(childTransform).toHaveBeenCalledWith({
 				instance: expect.any(Form.Instance),
 				path: ['user', 'role'],
 				prevValue: 'admin',
 				value: 'Admin'
 			});
-			expect(transform).toHaveBeenCalledWith({
+			expect(childTransform).toHaveBeenCalledWith({
 				instance: expect.any(Form.Instance),
 				path: ['user', 'role'],
 				prevValue: 'admin',
@@ -1029,8 +1037,8 @@ describe('/form', () => {
 			render(
 				<Form value={initialValue}>
 					<Form.Item
+						childTransform={priceTransform}
 						path={['price']}
-						transform={priceTransform}
 					>
 						<input data-testid='price-input' />
 					</Form.Item>
