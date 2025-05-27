@@ -154,7 +154,7 @@ Component to display or use form values in your UI.
 
 ```jsx
 <Form.Value path={['user', 'type']}>
-	{value => {
+	{({ value }) => {
 		if (value === 'admin') {
 			return <div>Admin Fields...</div>;
 		}
@@ -255,7 +255,7 @@ const MyComponent = () => {
 </Form.Item>
 
 <Form.Value path={['contactMethod']}>
-  {value => {
+  {({ value }) => {
     if (value === 'email') {
       return (
         <Form.Item path={['emailAddress']} required>

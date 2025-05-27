@@ -275,7 +275,7 @@ const DynamicForm = () => {
 					</div>
 
 					<Form.Value path={['contactMethod']}>
-						{value => {
+						{({ value }) => {
 							if (value === 'email') {
 								return (
 									<div className='form-group'>

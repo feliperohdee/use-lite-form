@@ -49,11 +49,11 @@ namespace Form {
 	export type Value = Instance.Value;
 	export type ValueProps = {
 		path: Path;
-		children: (value: Instance.Value) => ReactNode;
+		children: (value: { value: Instance.Value }) => ReactNode;
 	};
 
 	export type SubmitProps = {
-		children: (value: Instance.Value) => ReactNode;
+		children: (props: { submit: (value: Instance.Value) => void }) => ReactNode;
 	};
 }
 
@@ -281,7 +281,7 @@ const Value = ({ path, children }: Form.ValueProps) => {
 
 	const value = instance.get(path);
 
-	return <>{children(value)}</>;
+	return <>{children({ value })}</>;
 };
 
 // Static properties

@@ -392,7 +392,7 @@ describe('/form', () => {
 
 			render(
 				<Form value={initialValue}>
-					<Form.Value path={['user', 'name']}>{value => <div data-testid='name-value'>{value}</div>}</Form.Value>
+					<Form.Value path={['user', 'name']}>{({ value }) => <div data-testid='name-value'>{value}</div>}</Form.Value>
 				</Form>
 			);
 
@@ -424,7 +424,7 @@ describe('/form', () => {
 						)}
 					</Form.Item>
 					<Form.Value path={['user', 'name']}>
-						{value => {
+						{({ value }) => {
 							return <div data-testid='name-display'>{value}</div>;
 						}}
 					</Form.Value>
@@ -459,11 +459,11 @@ describe('/form', () => {
 			render(
 				<Form value={initialValue}>
 					<Form.Value path={['user']}>
-						{user => (
+						{({ value: user }) => (
 							<div>
 								<div data-testid='user-name'>{user.name}</div>
 								<Form.Value path={['user', 'address']}>
-									{address => (
+									{({ value: address }) => (
 										<div>
 											<div data-testid='user-city'>{address.city}</div>
 											<div data-testid='user-country'>{address.country}</div>
@@ -487,7 +487,7 @@ describe('/form', () => {
 			console.error = vi.fn();
 
 			expect(() => {
-				render(<Form.Value path={['user', 'name']}>{value => <div>{value}</div>}</Form.Value>);
+				render(<Form.Value path={['user', 'name']}>{({ value }) => <div>{value}</div>}</Form.Value>);
 			}).toThrow('"Form.Value" must be used within a "Form" component.');
 
 			// Restore console.error
@@ -759,8 +759,8 @@ describe('/form', () => {
 						<input data-testid='role-input' />
 					</Form.Item>
 					<Form.Value path={['user', 'isAdmin']}>
-						{isAdmin => {
-							return <div data-testid='admin-status'>{isAdmin ? 'Yes' : 'No'}</div>;
+						{({ value }) => {
+							return <div data-testid='admin-status'>{value ? 'Yes' : 'No'}</div>;
 						}}
 					</Form.Value>
 				</Form>
