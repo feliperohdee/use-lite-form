@@ -18,7 +18,7 @@ namespace List {
 		canRemove: boolean;
 		getId: (value: Instance.Value, key: number, index: number) => string;
 		getKey: (index: number) => number;
-		getValue: (index?: number) => Instance.Value | null;
+		getNthValue: (index: number) => Instance.Value | null;
 		handleAdd: (value: Instance.Value, index?: number) => number;
 		handleRemove: (index: number) => void;
 		handleMove: (from: number, to: number) => void;
@@ -44,8 +44,10 @@ namespace List {
 		duplicate: (newValue?: Instance.Value | ((value: Instance.Value) => Instance.Value)) => number | undefined;
 		error: () => Instance.Error | Instance.Error[];
 		first: boolean;
-		getValue: (index?: number) => Instance.Value | null;
+		getNthValue: (index: number) => Instance.Value | null;
 		index: number;
+		instance: Instance;
+		items: Item[];
 		key: number;
 		last: boolean;
 		moveDown: () => void;
@@ -75,7 +77,7 @@ const listContext = createContext<List.Context>({
 	canAdd: false,
 	canRemove: false,
 	getId: () => '',
-	getValue: () => null,
+	getNthValue: () => null,
 	getKey: () => 0,
 	handleAdd: () => 0,
 	handleRemove: () => {},
@@ -223,17 +225,15 @@ const List = ({
 		[instance, path]
 	);
 
-	const items = map(instance.get(path, []), (value, index) => ({
-		index,
-		value
-	}));
+	const items = map(instance.get(path, []), (value, index) => {
+		return {
+			index,
+			value
+		};
+	});
 
-	const getValue = useCallback(
-		(index?: number) => {
-			if (isUndefined(index)) {
-				return map(items, 'item');
-			}
-
+	const getNthValue = useCallback(
+		(index: number) => {
 			const item = nth(items, index);
 
 			return item ? item.value : null;
@@ -254,7 +254,7 @@ const List = ({
 		canRemove,
 		getId,
 		getKey,
-		getValue,
+		getNthValue,
 		handleAdd,
 		handleRemove,
 		handleMove,
@@ -275,7 +275,7 @@ const List = ({
 					return handleAdd(value, index);
 				},
 				canAdd,
-				getValue,
+				getNthValue,
 				replace,
 				size
 			})}
@@ -290,7 +290,7 @@ const ListItems = ({ children, filter: filterFn }: List.ItemsProps) => {
 		canRemove,
 		getId,
 		getKey,
-		getValue,
+		getNthValue,
 		handleAdd,
 		handleRemove,
 		handleMove,
@@ -362,8 +362,10 @@ const ListItems = ({ children, filter: filterFn }: List.ItemsProps) => {
 				return instance.getError([...path, index]) as Instance.Error | Instance.Error[];
 			},
 			first,
-			getValue,
+			getNthValue,
 			index,
+			instance,
+			items,
 			key,
 			last,
 			moveDown: () => {
@@ -378,7 +380,7 @@ const ListItems = ({ children, filter: filterFn }: List.ItemsProps) => {
 						nextIndex < itemsSize &&
 						!filterFn({
 							index: nextIndex,
-							value: getValue(nextIndex)
+							value: getNthValue(nextIndex)
 						})
 					) {
 						nextIndex += 1;
@@ -398,7 +400,7 @@ const ListItems = ({ children, filter: filterFn }: List.ItemsProps) => {
 						prevIndex >= 0 &&
 						!filterFn({
 							index: prevIndex,
-							value: getValue(prevIndex)
+							value: getNthValue(prevIndex)
 						})
 					) {
 						prevIndex -= 1;
@@ -420,9 +422,12 @@ const ListItems = ({ children, filter: filterFn }: List.ItemsProps) => {
 type ListAddRenderProps = {
 	add: (value: Instance.Value, index?: number) => number | undefined;
 	canAdd: boolean;
-	getValue: (index?: number) => Instance.Value | null;
+	getNthValue: (index: number) => Instance.Value | null;
+	instance: Instance;
+	items: List.Item[];
 	replace: (value: Instance.Value) => void;
 	size: number;
+	value: Instance.Value;
 };
 
 type ListAddRenderFunction = (props: ListAddRenderProps) => ReactNode;
@@ -431,7 +436,8 @@ type ListAddProps = {
 };
 
 const ListAdd = ({ children }: ListAddProps) => {
-	const { canAdd, getValue, handleAdd, replace, size } = useContext(listContext);
+	const { instance } = useContext(context);
+	const { canAdd, getNthValue, handleAdd, items, replace, size } = useContext(listContext);
 
 	return util.renderChildren(children, {
 		add: (value: Instance.Value, index = -1) => {
@@ -442,7 +448,9 @@ const ListAdd = ({ children }: ListAddProps) => {
 			return handleAdd(value, index);
 		},
 		canAdd,
-		getValue,
+		getNthValue,
+		instance,
+		items,
 		replace,
 		size
 	});
