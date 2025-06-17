@@ -19,6 +19,7 @@ A lightweight, type-safe form management library for React with a powerful and i
 - ⚡ **Value Transformations** - Transform inputs and outputs
 - 🧠 **Type-Safe** - Full TypeScript support
 - 🗄️ **Lists Support** - Arrays of objects with CRUD operations
+- ↩️ **Undo/Redo** - Built-in support for form state history
 
 ## 📦 Installation
 
@@ -199,6 +200,58 @@ const MyComponent = () => {
 };
 ```
 
+### `Form.useFormHistory(options?: object)`
+
+A hook to manage the form's value history, enabling undo and redo functionality. It must be used within a `<Form>` component.
+
+```jsx
+const HistoryControls = () => {
+	const { canRedo, canUndo, redo, undo, clear } = Form.useFormHistory({
+		maxCapacity: 20 // Optional: defaults to 10
+	});
+
+	return (
+		<div>
+			<button
+				onClick={undo}
+				disabled={!canUndo}
+			>
+				Undo
+			</button>
+			<button
+				onClick={redo}
+				disabled={!canRedo}
+			>
+				Redo
+			</button>
+			<button onClick={clear}>Clear History</button>
+		</div>
+	);
+};
+
+const MyForm = () => {
+	return (
+		<Form>
+			<HistoryControls />
+			{/* Form.Item fields go here */}
+		</Form>
+	);
+};
+```
+
+#### Options
+
+- `maxCapacity` (optional, `number`): The maximum number of history states to store. Defaults to `10`.
+- `debounceTime` (optional, `number`): Time in milliseconds to debounce history updates.
+
+#### Returns
+
+- `canUndo` (`boolean`): True if there is a past state to revert to.
+- `canRedo` (`boolean`): True if there is a future state to restore.
+- `undo()` (`function`): Reverts the form to the previous state.
+- `redo()` (`function`): Restores the next state in the history.
+- `clear()` (`function`): Clears the entire history.
+
 ## 🎯 Advanced Usage
 
 ### Custom Validation
@@ -320,6 +373,64 @@ const MyComponent = () => {
 </Form.List>
 ```
 
+### Undo/Redo with `useFormHistory`
+
+Implement undo/redo functionality by creating a control component that uses the `Form.useFormHistory` hook.
+
+```jsx
+import Form from 'use-lite-form';
+
+// A component to manage history controls
+const HistoryControls = () => {
+	const { canRedo, canUndo, redo, undo } = Form.useFormHistory();
+
+	return (
+		<div>
+			<button
+				type='button'
+				onClick={undo}
+				disabled={!canUndo}
+			>
+				Undo
+			</button>
+			<button
+				type='button'
+				onClick={redo}
+				disabled={!canRedo}
+			>
+				Redo
+			</button>
+		</div>
+	);
+};
+
+// The main form component
+const EditorForm = () => (
+	<Form>
+		<HistoryControls />
+
+		<Form.Item
+			path={['title']}
+			debounce={500}
+		>
+			<input
+				type='text'
+				placeholder='Title'
+			/>
+		</Form.Item>
+
+		<Form.Item
+			path={['content']}
+			debounce={500}
+		>
+			<textarea placeholder='Start writing...' />
+		</Form.Item>
+
+		<button type='submit'>Save</button>
+	</Form>
+);
+```
+
 ## 🧠 How It Works
 
 `use-lite-form` is built around React's Context API to provide a seamless form management experience:
@@ -330,6 +441,7 @@ const MyComponent = () => {
 4. **Validation System**: Flexible validation with custom error messages
 5. **List Management**: Special handling for arrays of form items
 6. **Transformations**: Support for transforming data between the view and the model
+7. **History Management**: A dedicated hook `useFormHistory` listens for form changes and manages a history stack for undo/redo operations.
 
 ## 🧪 Running Tests
 

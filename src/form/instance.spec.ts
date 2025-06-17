@@ -377,7 +377,7 @@ describe('/form/instance', () => {
 					requiredErrorsCount: 0,
 					value: { name: 'test' }
 				},
-				false
+				{ silent: false }
 			);
 		});
 

@@ -620,6 +620,150 @@ const AdvancedForm = () => {
 	);
 };
 
+// Form History Demo - shows undo/redo functionality
+const FormHistoryDemo = () => {
+	const [formResult, setFormResult] = useState<any>(null);
+
+	const handleSubmit = (payload: Form.Payload) => {
+		setFormResult(payload.value);
+	};
+
+	return (
+		<div className='page'>
+			<h2>Form History (Undo/Redo)</h2>
+			<p>Demonstrates form state history with undo and redo functionality.</p>
+
+			<Form onSubmit={handleSubmit}>
+				{/* History Controls Component */}
+				<HistoryControls />
+
+				<div className='card'>
+					<h3>Personal Information</h3>
+
+					<div className='form-group'>
+						<label className='form-label'>Full Name</label>
+						<Form.Item
+							path={['name']}
+							required
+						>
+							<input
+								type='text'
+								className='form-input'
+								placeholder='Enter your full name'
+							/>
+						</Form.Item>
+					</div>
+
+					<div className='form-group'>
+						<label className='form-label'>Email</label>
+						<Form.Item
+							path={['email']}
+							required
+						>
+							<input
+								type='email'
+								className='form-input'
+								placeholder='Enter your email'
+							/>
+						</Form.Item>
+					</div>
+
+					<div className='form-group'>
+						<label className='form-label'>Bio</label>
+						<Form.Item
+							path={['bio']}
+							defaultValue=''
+						>
+							<textarea
+								className='form-input'
+								rows={4}
+								placeholder='Tell us about yourself...'
+							/>
+						</Form.Item>
+					</div>
+
+					<div className='form-group'>
+						<label className='form-label'>Age</label>
+						<Form.Item
+							path={['age']}
+							defaultValue={18}
+						>
+							<input
+								type='number'
+								className='form-input'
+								min={18}
+								max={100}
+							/>
+						</Form.Item>
+					</div>
+				</div>
+
+				<div className='actions'>
+					<button
+						type='submit'
+						className='button'
+					>
+						Submit
+					</button>
+				</div>
+			</Form>
+
+			{formResult && (
+				<div className='card form-result'>
+					<h3>Form Result</h3>
+					<pre className='result-display'>{JSON.stringify(formResult, null, 2)}</pre>
+				</div>
+			)}
+		</div>
+	);
+};
+
+// History Controls Component that uses the useFormHistory hook
+const HistoryControls = () => {
+	const { canRedo, canUndo, clear, redo, undo } = Form.useFormHistory({
+		maxCapacity: 10
+	});
+
+	return (
+		<div className='card'>
+			<h3>History Controls</h3>
+			<div className='form-group'>
+				<div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
+					<button
+						type='button'
+						className='button'
+						onClick={undo}
+						disabled={!canUndo}
+						title='Undo last change'
+					>
+						← Undo
+					</button>
+					<button
+						type='button'
+						className='button'
+						onClick={redo}
+						disabled={!canRedo}
+						title='Redo last undone change'
+					>
+						Redo →
+					</button>
+					<button
+						type='button'
+						className='button'
+						onClick={clear}
+						title='Clear history'
+					>
+						Clear History
+					</button>
+				</div>
+				<div style={{ fontSize: '14px', color: '#666' }}>
+					Can undo: {canUndo ? 'Yes' : 'No'} | Can redo: {canRedo ? 'Yes' : 'No'}
+				</div>
+			</div>
+		</div>
+	);
+};
+
 const Demo = () => {
 	const [activeTab, setActiveTab] = useState('basic');
 
@@ -660,6 +804,13 @@ const Demo = () => {
 				<AdvancedForm />
 			</div>
 
+			<div
+				id='history'
+				className={`tab-content ${activeTab === 'history' ? '' : 'hidden'}`}
+			>
+				<FormHistoryDemo />
+			</div>
+
 			<div className='actions tab-buttons'>
 				<button
 					className={`button tab-button ${activeTab === 'basic' ? 'active' : 'inactive'}`}
@@ -694,6 +845,13 @@ const Demo = () => {
 					onClick={() => setActiveTab('advanced')}
 				>
 					Advanced
+				</button>
+
+				<button
+					className={`button tab-button ${activeTab === 'history' ? 'active' : 'inactive'}`}
+					onClick={() => setActiveTab('history')}
+				>
+					History (Undo/Redo)
 				</button>
 			</div>
 		</Layout>

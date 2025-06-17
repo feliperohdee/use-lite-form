@@ -23,6 +23,7 @@ import Instance from '@/form/instance';
 import Item from '@/form/item';
 import List from '@/form/list';
 import useForm from '@/form/use-form';
+import useFormHistory from '@/form/use-form-history';
 import useNewForm from '@/form/use-new-form';
 import util from '@/form/util';
 
@@ -119,7 +120,7 @@ const Form = ({
 
 	// Form change handler
 	const handleChange = useCallback(
-		(payload: Instance.Payload, silent = false) => {
+		(payload: Instance.Payload, options: { silent: boolean }) => {
 			// force context consumers to update
 			setContextState(state => {
 				return {
@@ -127,7 +128,7 @@ const Form = ({
 				};
 			});
 
-			if (!silent && isFunction(onChange)) {
+			if (!options.silent && isFunction(onChange)) {
 				onChange(payload);
 			}
 		},
@@ -291,6 +292,7 @@ Form.Item = Item;
 Form.List = List;
 Form.Submit = Submit;
 Form.useForm = useForm;
+Form.useFormHistory = useFormHistory;
 Form.useNewForm = useNewForm;
 Form.Value = Value;
 

@@ -166,7 +166,7 @@ namespace Instance {
 	};
 
 	export type Listener<T extends object = Value> = {
-		(payload: Payload<T>, silent: boolean): void;
+		(payload: Payload<T>, options: { silent: boolean }): void;
 	};
 	export type Value = any;
 }
@@ -423,7 +423,7 @@ class Instance<T extends object = Instance.Value> {
 
 		const payload = this.getPayload();
 		this.onChangeListeners.forEach(listener => {
-			listener(payload, silent);
+			listener(payload, { silent });
 		});
 	}, 10);
 
