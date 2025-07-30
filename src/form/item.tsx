@@ -1,4 +1,4 @@
-import { ReactNode, forwardRef, ForwardedRef, useCallback, useContext, useState, useEffect, useRef } from 'react';
+import { ReactNode, forwardRef, ForwardedRef, useCallback, useContext, useState, useEffect, useId, useRef } from 'react';
 import debounce from 'lodash/debounce';
 import forEach from 'lodash/forEach';
 import isArray from 'lodash/isArray';
@@ -57,12 +57,11 @@ namespace Item {
 	};
 }
 
-let itemIndex = 0;
-
 const trimString = (value: string): string => {
 	if (isString(value)) {
 		return trim(value);
 	}
+
 	return value;
 };
 
@@ -175,7 +174,8 @@ const Item = forwardRef(
 			return value;
 		});
 
-		const idRef = useRef(propId || `form-item-${itemIndex++}`);
+		const id = useId();
+		const idRef = useRef(propId || `form-item-${id}`);
 		const itemRef = useRef<Instance.RegisteredItem>(null);
 		const pathRef = useRef(propPath);
 		const reportFormDelayedRef = useRef<(() => void) & { cancel?: () => void }>(null);

@@ -36,7 +36,6 @@ const useFormHistory = (options: UseFormHistoryOptions = {}) => {
 		});
 
 		return () => {
-			console.log('unsubscribe');
 			return unsubscribe();
 		};
 	}, [instance, set]);
