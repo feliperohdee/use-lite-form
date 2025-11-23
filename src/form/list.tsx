@@ -28,26 +28,26 @@ namespace List {
 		size: number;
 	};
 
-	export type Item = {
+	export type Item<T extends object = Instance.Value> = {
 		index: number;
-		value: Instance.Value;
+		value: T;
 	};
 
-	export type ItemRenderProps = {
-		add: (value: Instance.Value, index?: number) => number | undefined;
+	export type ItemFunctionProps<T extends object = Instance.Value> = {
+		add: (value: T, index?: number) => number | undefined;
 		addStart: (value: Instance.Value) => number | undefined;
-		addAfter: (value: Instance.Value) => number | undefined;
-		addBefore: (value: Instance.Value) => number | undefined;
+		addAfter: (value: T) => number | undefined;
+		addBefore: (value: T) => number | undefined;
 		canAdd: boolean;
 		canRemove: boolean;
 		remove: () => void;
-		duplicate: (newValue?: Instance.Value | ((value: Instance.Value) => Instance.Value)) => number | undefined;
+		duplicate: (newValue?: T | ((value: T) => T)) => number | undefined;
 		error: () => Instance.Error | Instance.Error[];
 		first: boolean;
-		getNthValue: (index: number) => Instance.Value | null;
+		getNthValue: (index: number) => T | null;
 		index: number;
 		instance: Instance;
-		items: Item[];
+		items: Item<T>[];
 		key: number;
 		last: boolean;
 		moveDown: () => void;
@@ -55,13 +55,13 @@ namespace List {
 		path: Instance.Path;
 		replace: (value: Instance.Value) => void;
 		size: number;
-		value: Instance.Value;
+		value: T;
 	};
 
-	export type ItemsRenderFunction = (props: ItemRenderProps) => ReactNode;
-	export type ItemsProps = {
-		children: ReactNode | ItemsRenderFunction;
-		filter?: (item: List.Item) => boolean;
+	export type ItemFunction<T extends object = Instance.Value> = (props: ItemFunctionProps<T>) => ReactNode;
+	export type ItemProps<T extends object = Instance.Value> = {
+		children: ReactNode | ItemFunction<T>;
+		filter?: (item: List.Item<T>) => boolean;
 	};
 
 	export type Props = {
@@ -283,7 +283,7 @@ const List = ({
 	);
 };
 
-const ListItems = ({ children, filter: filterFn }: List.ItemsProps) => {
+const ListItems = ({ children, filter: filterFn }: List.ItemProps) => {
 	let { instance } = useContext(context);
 	let {
 		canAdd,
@@ -310,7 +310,7 @@ const ListItems = ({ children, filter: filterFn }: List.ItemsProps) => {
 		const first = localIndex === 0;
 		const last = localIndex >= itemsSize - 1;
 
-		const itemProps: List.ItemRenderProps = {
+		const itemFunctionProps: List.ItemFunctionProps = {
 			add: (value: Instance.Value, index?: number) => {
 				if (!canAdd) {
 					return;
@@ -415,7 +415,7 @@ const ListItems = ({ children, filter: filterFn }: List.ItemsProps) => {
 			value
 		};
 
-		return <Fragment key={getId(value, key, index)}>{util.renderChildren(children, itemProps)}</Fragment>;
+		return <Fragment key={getId(value, key, index)}>{util.renderChildren(children, itemFunctionProps)}</Fragment>;
 	}).filter(Boolean);
 };
 

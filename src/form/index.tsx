@@ -53,6 +53,11 @@ namespace Form {
 		children: (value: { value: Instance.Value }) => ReactNode;
 	};
 
+	export type ItemFunctionProps<T extends object = Instance.Value> = Item.ItemFunctionProps<T>;
+	export type ItemFunction<T extends object = Instance.Value> = Item.ItemFunction<T>;
+	export type ListItemFunctionProps<T extends object = Instance.Value> = List.ItemFunctionProps<T>;
+	export type ListItemFunction<T extends object = Instance.Value> = List.ItemFunction<T>;
+
 	export type SubmitProps = {
 		children: (props: { submit: (value: Instance.Value) => void }) => ReactNode;
 	};

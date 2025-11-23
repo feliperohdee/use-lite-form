@@ -14,17 +14,17 @@ import Instance from '@/form/instance';
 import util from '@/form/util';
 
 namespace Item {
-	export type RenderProps = {
+	export type ItemFunctionProps<T extends object = Instance.Value> = {
 		[key: string]: any;
 		error: Instance.Errors | Instance.Error | Instance.Error[];
 		id: string;
 		onChange: (value: Instance.Value) => void;
-		value: Instance.Value;
+		value: T;
 	};
 
-	export type RenderFunction = (props: RenderProps) => ReactNode;
+	export type ItemFunction<T extends object = Instance.Value> = (props: ItemFunctionProps<T>) => ReactNode;
 	export type Props = {
-		children: ReactNode | RenderFunction;
+		children: ReactNode | ItemFunction;
 		childTransform?: (input: {
 			instance: Instance;
 			prevValue: Instance.Value;
@@ -361,12 +361,14 @@ const Item = forwardRef(
 			ref
 		};
 
-		return util.renderChildren(children, childrenProps, {
+		const itemFunctionProps: Item.ItemFunctionProps = {
 			error: state.error,
 			id: idRef.current,
 			onChange: handleChange,
 			value: state.value
-		});
+		};
+
+		return util.renderChildren(children, childrenProps, itemFunctionProps);
 	}
 );
 
