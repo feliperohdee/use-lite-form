@@ -5,8 +5,8 @@ import now from 'lodash/now';
 import {
 	createElement,
 	ElementType,
-	ForwardedRef,
 	FormEvent,
+	ForwardedRef,
 	HTMLAttributes,
 	KeyboardEvent,
 	PropsWithChildren,
