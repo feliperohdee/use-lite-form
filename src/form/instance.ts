@@ -214,7 +214,7 @@ class Instance<T extends object = Instance.Value> {
 	};
 
 	private items: Set<Instance.RegisteredItem>;
-	private onChangeListeners: Set<Instance.Listener>;
+	private onChangeListeners: Set<Instance.Listener<T>>;
 
 	public changed: boolean;
 	public changesCount: number;
@@ -338,7 +338,7 @@ class Instance<T extends object = Instance.Value> {
 		return true;
 	}
 
-	onChange(listener: Instance.Listener): () => void {
+	onChange(listener: Instance.Listener<T>): () => void {
 		if (!isFunction(listener)) {
 			throw new Error('listener must be a function.');
 		}
