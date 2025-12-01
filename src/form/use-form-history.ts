@@ -22,15 +22,23 @@ const useFormHistory = (options: UseFormHistoryOptions = {}) => {
 		debounceSettings,
 		maxCapacity,
 		onChange: ({ action, state }) => {
-			if (action === 'INITIAL' || action === 'REDO' || action === 'UNDO') {
-				instance.replace(state);
+			if (action === 'INITIAL') {
+				instance.clear();
+			} else if (action === 'REDO' || action === 'UNDO') {
+				instance.historyAction(action, state);
 			}
 		}
 	});
 
 	useEffect(() => {
-		const unsubscribe = instance.onChange(payload => {
-			historyActions.set(payload.value);
+		const unsubscribe = instance.onChange((payload, { action }) => {
+			if (action === 'HISTORY_REPLACE') {
+				historyActions.replace(payload.value);
+			}
+
+			if (!action.startsWith('HISTORY_')) {
+				historyActions.set(payload.value);
+			}
 		});
 
 		return () => {

@@ -146,7 +146,18 @@ namespace Instance {
 		[key: string]: Errors | Error | Error[];
 	};
 
-	export type Action = 'CLEAR' | 'CLEAR_ERRORS' | 'INIT' | 'PATCH' | 'REPLACE' | 'SET_ERROR' | 'SET' | 'UNSET_ERROR';
+	export type Action =
+		| 'CLEAR'
+		| 'CLEAR_ERRORS'
+		| 'INIT'
+		| 'PATCH'
+		| 'REPLACE'
+		| 'HISTORY_REDO'
+		| 'HISTORY_REPLACE'
+		| 'HISTORY_UNDO'
+		| 'SET_ERROR'
+		| 'SET'
+		| 'UNSET_ERROR';
 	export type Payload<T extends object = Value, V = Nil> = {
 		changed: boolean;
 		changesCount: number;
@@ -326,6 +337,22 @@ class Instance<T extends object = Instance.Value> {
 			requiredErrorsCount: this.requiredErrorsCount(),
 			value: this.value
 		};
+	}
+
+	historyAction(action: 'REDO' | 'UNDO' | 'REPLACE', value: T, silent: boolean = false): void {
+		this.value = value;
+
+		switch (action) {
+			case 'REDO':
+				this.triggerOnChange({ action: 'HISTORY_REDO', silent });
+				break;
+			case 'REPLACE':
+				this.triggerOnChange({ action: 'HISTORY_REPLACE', silent });
+				break;
+			case 'UNDO':
+				this.triggerOnChange({ action: 'HISTORY_UNDO', silent });
+				break;
+		}
 	}
 
 	init(value: T, silent: boolean = false): boolean {
