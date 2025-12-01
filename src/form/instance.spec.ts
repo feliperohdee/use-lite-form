@@ -60,7 +60,7 @@ describe('/form/instance', () => {
 			expect(result2).toEqual('test');
 
 			// After triggering onChange, cache should be cleared
-			instance.triggerOnChange({ silent: true });
+			instance.triggerOnChange({ action: 'SET', silent: true });
 
 			// Now should get the new value
 			expect(instance.get(path)).toEqual('modified');
@@ -93,13 +93,13 @@ describe('/form/instance', () => {
 		it('should trigger onChange when setting a value', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.set(['user', 'name'], 'test');
-			expect(triggerSpy).toHaveBeenCalledWith({ silent: false });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'SET', silent: false });
 		});
 
 		it('should not trigger onChange when silent is true', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.set(['user', 'name'], 'test', true);
-			expect(triggerSpy).toHaveBeenCalledWith({ silent: true });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'SET', silent: true });
 		});
 
 		it('should return the updated value', () => {
@@ -117,13 +117,13 @@ describe('/form/instance', () => {
 		it('should trigger onChange when setting an error', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.setError(['user', 'name'], 'Required field');
-			expect(triggerSpy).toHaveBeenCalledWith({ silent: false });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'SET_ERROR', silent: false });
 		});
 
 		it('should not trigger onChange when silent is true', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.setError(['user', 'name'], 'Required field', true);
-			expect(triggerSpy).toHaveBeenCalledWith({ silent: true });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'SET_ERROR', silent: true });
 		});
 
 		it('should add to requiredErrors when requiredError is true', () => {
@@ -170,13 +170,13 @@ describe('/form/instance', () => {
 		it('should trigger onChange when unsetting an error', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.unsetError(['user', 'name']);
-			expect(triggerSpy).toHaveBeenCalledWith({ silent: false });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'UNSET_ERROR', silent: false });
 		});
 
 		it('should not trigger onChange when silent is true', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.unsetError(['user', 'name'], true);
-			expect(triggerSpy).toHaveBeenCalledWith({ silent: true });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'UNSET_ERROR', silent: true });
 		});
 
 		it('should return the updated errors', () => {
@@ -198,13 +198,13 @@ describe('/form/instance', () => {
 		it('should trigger onChange when updating a value', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.update(['count'], value => value + 1);
-			expect(triggerSpy).toHaveBeenCalledWith({ silent: false });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'SET', silent: false });
 		});
 
 		it('should not trigger onChange when silent is true', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.update(['count'], value => value + 1, true);
-			expect(triggerSpy).toHaveBeenCalledWith({ silent: true });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'SET', silent: true });
 		});
 
 		it('should return the updated value', () => {
@@ -236,13 +236,13 @@ describe('/form/instance', () => {
 		it('should trigger onChange when patching', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.patch({ email: 'john@example.com' });
-			expect(triggerSpy).toHaveBeenCalledWith({ silent: false });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'PATCH', silent: false });
 		});
 
 		it('should not trigger onChange when silent is true', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.patch({ email: 'john@example.com' }, true);
-			expect(triggerSpy).toHaveBeenCalledWith({ silent: true });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'PATCH', silent: true });
 		});
 	});
 
@@ -259,13 +259,13 @@ describe('/form/instance', () => {
 		it('should trigger onChange when replacing', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.replace({ email: 'john@example.com' });
-			expect(triggerSpy).toHaveBeenCalledWith({ silent: false });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'REPLACE', silent: false });
 		});
 
 		it('should not trigger onChange when silent is true', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.replace({ email: 'john@example.com' }, true);
-			expect(triggerSpy).toHaveBeenCalledWith({ silent: true });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'REPLACE', silent: true });
 		});
 	});
 
@@ -286,13 +286,13 @@ describe('/form/instance', () => {
 		it('should trigger onChange when clearing', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.clear();
-			expect(triggerSpy).toHaveBeenCalledWith({ silent: false });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'CLEAR', silent: false });
 		});
 
 		it('should not trigger onChange when silent is true', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.clear(true);
-			expect(triggerSpy).toHaveBeenCalledWith({ silent: true });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'CLEAR', silent: true });
 		});
 	});
 
@@ -313,13 +313,13 @@ describe('/form/instance', () => {
 		it('should trigger onChange when clearing errors', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.clearErrors();
-			expect(triggerSpy).toHaveBeenCalledWith({ silent: false });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'CLEAR_ERRORS', silent: false });
 		});
 
 		it('should not trigger onChange when silent is true', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.clearErrors(true);
-			expect(triggerSpy).toHaveBeenCalledWith({ silent: true });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'CLEAR_ERRORS', silent: true });
 		});
 	});
 
@@ -377,7 +377,7 @@ describe('/form/instance', () => {
 					requiredErrorsCount: 0,
 					value: { name: 'test' }
 				},
-				{ silent: false }
+				{ action: 'SET', silent: false }
 			);
 		});
 

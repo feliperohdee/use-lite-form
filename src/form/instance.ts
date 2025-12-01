@@ -146,6 +146,7 @@ namespace Instance {
 		[key: string]: Errors | Error | Error[];
 	};
 
+	export type Action = 'CLEAR' | 'CLEAR_ERRORS' | 'INIT' | 'PATCH' | 'REPLACE' | 'SET_ERROR' | 'SET' | 'UNSET_ERROR';
 	export type Payload<T extends object = Value, V = Nil> = {
 		changed: boolean;
 		changesCount: number;
@@ -166,7 +167,7 @@ namespace Instance {
 	};
 
 	export type Listener<T extends object = Value> = {
-		(payload: Payload<T>, options: { silent: boolean }): void;
+		(payload: Payload<T>, options: { action: Instance.Action; silent: boolean }): void;
 	};
 	export type Value = any;
 }
@@ -262,13 +263,13 @@ class Instance<T extends object = Instance.Value> {
 		this.errors = {};
 		this.requiredErrors.clear();
 		this.value = {} as T;
-		this.triggerOnChange({ silent });
+		this.triggerOnChange({ action: 'CLEAR', silent });
 	}
 
 	clearErrors(silent: boolean = false): void {
 		this.errors = {};
 		this.requiredErrors.clear();
-		this.triggerOnChange({ silent });
+		this.triggerOnChange({ action: 'CLEAR_ERRORS', silent });
 	}
 
 	errorsCount(): number {
@@ -333,7 +334,7 @@ class Instance<T extends object = Instance.Value> {
 		}
 
 		this.value = value;
-		this.triggerOnChange({ silent });
+		this.triggerOnChange({ action: 'INIT', silent });
 
 		return true;
 	}
@@ -355,7 +356,7 @@ class Instance<T extends object = Instance.Value> {
 			...this.value,
 			...value
 		};
-		this.triggerOnChange({ silent });
+		this.triggerOnChange({ action: 'PATCH', silent });
 	}
 
 	registerItem(item: Instance.RegisteredItem): void {
@@ -364,7 +365,7 @@ class Instance<T extends object = Instance.Value> {
 
 	replace(value: T, silent: boolean = false): void {
 		this.value = value;
-		this.triggerOnChange({ silent });
+		this.triggerOnChange({ action: 'REPLACE', silent });
 	}
 
 	requestImmediateValue(): void {
@@ -381,7 +382,7 @@ class Instance<T extends object = Instance.Value> {
 
 	set(path: Instance.Path, value: Instance.Value, silent: boolean = false): T {
 		this.value = set(cloneDeep(this.value), path, value);
-		this.triggerOnChange({ silent });
+		this.triggerOnChange({ action: 'SET', silent });
 
 		return this.value;
 	}
@@ -402,28 +403,28 @@ class Instance<T extends object = Instance.Value> {
 			this.requiredErrors.add(path);
 		}
 
-		this.triggerOnChange({ silent });
+		this.triggerOnChange({ action: 'SET_ERROR', silent });
 
 		return this.errors;
 	}
 
-	triggerOnChange(args: { silent?: boolean }) {
-		const { silent = false } = args;
+	triggerOnChange(args: { action: Instance.Action; silent?: boolean }) {
+		const { action, silent = false } = args;
 
 		this.lastChange = now();
 		this.cacheFlush();
-		this.triggerOnChangeDebounced({ silent });
+		this.triggerOnChangeDebounced({ action, silent });
 	}
 
-	triggerOnChangeDebounced = debounce((args: { silent?: boolean }) => {
-		const { silent = false } = args;
+	triggerOnChangeDebounced = debounce((args: { action: Instance.Action; silent?: boolean }) => {
+		const { action, silent = false } = args;
 
 		this.changesCount += 1;
 		this.changed = this.lastChange > this.lastSubmit;
 
 		const payload = this.getPayload();
 		this.onChangeListeners.forEach(listener => {
-			listener(payload, { silent });
+			listener(payload, { action, silent });
 		});
 	}, 10);
 
@@ -434,7 +435,7 @@ class Instance<T extends object = Instance.Value> {
 	unsetError(path: Instance.Path, silent: boolean = false): Instance.Errors {
 		this.errors = deepClean(set(cloneDeep(this.errors), path, null));
 		this.requiredErrors.remove(path);
-		this.triggerOnChange({ silent });
+		this.triggerOnChange({ action: 'UNSET_ERROR', silent });
 
 		return this.errors;
 	}
