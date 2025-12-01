@@ -22,21 +22,20 @@ const useFormHistory = (options: UseFormHistoryOptions = {}) => {
 		debounceSettings,
 		maxCapacity,
 		onChange: ({ action, state }) => {
-			if (action === 'INITIAL') {
-				instance.clear();
-			} else if (action === 'REDO' || action === 'UNDO') {
+			if (action === 'REDO' || action === 'UNDO') {
 				instance.historyAction(action, state);
 			}
 		}
 	});
 
+	// subscribe to form changes and commit them to the history
 	useEffect(() => {
 		const unsubscribe = instance.onChange((payload, { action }) => {
 			if (action === 'HISTORY_REPLACE') {
+				// form was replaced using "HISTORY_REPLACE" and we need to replace the history state too
 				historyActions.replace(payload.value);
-			}
-
-			if (!action.startsWith('HISTORY_')) {
+			} else if (!action.startsWith('HISTORY_')) {
+				// Just commit changes to the history if they are not history-related
 				historyActions.set(payload.value);
 			}
 		});
