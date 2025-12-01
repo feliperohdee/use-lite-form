@@ -10,7 +10,7 @@ type UseFormHistoryOptions = {
 };
 
 const useFormHistory = (options: UseFormHistoryOptions = {}) => {
-	const { debounceSettings, debounceMs, maxCapacity = 10 } = options;
+	const { debounceMs, debounceSettings, maxCapacity } = options;
 	const { instance } = useContext(FormContext);
 
 	if (!instance) {
@@ -18,21 +18,19 @@ const useFormHistory = (options: UseFormHistoryOptions = {}) => {
 	}
 
 	const [historyState, historyActions] = useHistoryState(instance.value, {
-		debounceSettings,
 		debounceMs,
+		debounceSettings,
 		maxCapacity,
 		onChange: ({ action, state }) => {
-			if (action === 'CLEAR' || action === 'REDO' || action === 'UNDO') {
-				instance.replace(state, true);
+			if (action === 'INITIAL' || action === 'REDO' || action === 'UNDO') {
+				instance.replace(state);
 			}
 		}
 	});
 
 	useEffect(() => {
-		const unsubscribe = instance.onChange((payload, { silent }) => {
-			if (payload.changed && !silent) {
-				historyActions.set(payload.value);
-			}
+		const unsubscribe = instance.onChange(payload => {
+			historyActions.set(payload.value);
 		});
 
 		return () => {

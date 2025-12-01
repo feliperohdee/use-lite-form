@@ -66,7 +66,7 @@ describe('useFormHistory', () => {
 
 		const { result } = renderHook(
 			() => {
-				return useFormHistory({ maxCapacity: 5 });
+				return useFormHistory({ maxCapacity: 5, debounceMs: 0 });
 			},
 			{ wrapper }
 		);
@@ -115,7 +115,7 @@ describe('useFormHistory', () => {
 		});
 	});
 
-	it('should clear', async () => {
+	it('should reset to initial state', async () => {
 		const instance = new Instance({ name: '' });
 		const wrapper = createFormWrapper(instance);
 
@@ -137,9 +137,9 @@ describe('useFormHistory', () => {
 			expect(historyState.canUndo).toEqual(true);
 		});
 
-		// Clear history
+		// Reset to initial state
 		act(() => {
-			historyActions.clear();
+			historyActions.initial();
 		});
 
 		await waitFor(() => {
