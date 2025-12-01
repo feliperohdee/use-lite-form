@@ -23,7 +23,7 @@
 		"react-dom": "^19.1.1",
 		"typescript": "~5.8.2",
 		"typescript-eslint": "^8.22.0",
-		"use-good-hooks": "^1.0.30",
+		"use-good-hooks": "^1.0.40",
 		"use-json": "^1.0.1",
 		"use-qs": "^1.0.5",
 		"vite": "^6.2.0",
@@ -35,7 +35,7 @@
 		"lodash": "^4.17.21",
 		"react": "^19.1.1",
 		"react-dom": "^19.1.1",
-		"use-good-hooks": "^1.0.30",
+		"use-good-hooks": "^1.0.40",
 		"use-json": "^1.0.1",
 		"use-qs": "^1.0.5"
 	},
@@ -53,5 +53,5 @@
 		"test:coverage": "vitest --coverage --run",
 		"test:watch": "vitest"
 	},
-	"version": "1.0.63"
+	"version": "1.0.64"
 }

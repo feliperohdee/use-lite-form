@@ -5,21 +5,21 @@ import useHistoryState, { DebounceSettings } from 'use-good-hooks/use-history-st
 
 type UseFormHistoryOptions = {
 	maxCapacity?: number;
+	debounceMs?: number;
 	debounceSettings?: DebounceSettings;
-	debounceTime?: number;
 };
 
 const useFormHistory = (options: UseFormHistoryOptions = {}) => {
-	const { debounceSettings, debounceTime, maxCapacity = 10 } = options;
+	const { debounceSettings, debounceMs, maxCapacity = 10 } = options;
 	const { instance } = useContext(FormContext);
 
 	if (!instance) {
 		throw new Error('"useFormHistory" must be wrapped by a "Form".');
 	}
 
-	const { canRedo, canUndo, clear, redo, set, undo } = useHistoryState(instance.value, {
+	const [historyState, historyActions] = useHistoryState(instance.value, {
 		debounceSettings,
-		debounceTime,
+		debounceMs,
 		maxCapacity,
 		onChange: ({ action, state }) => {
 			if (action === 'CLEAR' || action === 'REDO' || action === 'UNDO') {
@@ -31,22 +31,16 @@ const useFormHistory = (options: UseFormHistoryOptions = {}) => {
 	useEffect(() => {
 		const unsubscribe = instance.onChange((payload, { silent }) => {
 			if (payload.changed && !silent) {
-				set(payload.value);
+				historyActions.set(payload.value);
 			}
 		});
 
 		return () => {
 			return unsubscribe();
 		};
-	}, [instance, set]);
+	}, [instance, historyActions]);
 
-	return {
-		canRedo,
-		canUndo,
-		clear,
-		redo,
-		undo
-	};
+	return [historyState, historyActions] as const;
 };
 
 export default useFormHistory;

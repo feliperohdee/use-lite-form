@@ -29,8 +29,9 @@ describe('useFormHistory', () => {
 
 		const { result } = renderHook(() => useFormHistory(), { wrapper });
 
-		expect(result.current.canRedo).toEqual(false);
-		expect(result.current.canUndo).toEqual(false);
+		const [historyState] = result.current;
+		expect(historyState.canRedo).toEqual(false);
+		expect(historyState.canUndo).toEqual(false);
 	});
 
 	it('should track form changes and enable undo', async () => {
@@ -44,16 +45,18 @@ describe('useFormHistory', () => {
 			{ wrapper }
 		);
 
-		expect(result.current.canRedo).toEqual(false);
-		expect(result.current.canUndo).toEqual(false);
+		let [historyState] = result.current;
+		expect(historyState.canRedo).toEqual(false);
+		expect(historyState.canUndo).toEqual(false);
 
 		act(() => {
 			instance.set(['name'], 'John Doe');
 		});
 
 		await waitFor(() => {
-			expect(result.current.canRedo).toEqual(false);
-			expect(result.current.canUndo).toEqual(true);
+			[historyState] = result.current;
+			expect(historyState.canRedo).toEqual(false);
+			expect(historyState.canUndo).toEqual(true);
 		});
 	});
 
@@ -73,9 +76,11 @@ describe('useFormHistory', () => {
 			instance.set(['email'], 'john@example.com');
 		});
 
+		let [historyState, historyActions] = result.current;
 		await waitFor(() => {
-			expect(result.current.canRedo).toEqual(false);
-			expect(result.current.canUndo).toEqual(true);
+			[historyState] = result.current;
+			expect(historyState.canRedo).toEqual(false);
+			expect(historyState.canUndo).toEqual(true);
 
 			expect(instance.get(['name'])).toEqual('John Doe');
 			expect(instance.get(['email'])).toEqual('john@example.com');
@@ -83,12 +88,13 @@ describe('useFormHistory', () => {
 
 		// Undo one change
 		act(() => {
-			result.current.undo();
+			historyActions.undo();
 		});
 
 		await waitFor(() => {
-			expect(result.current.canRedo).toEqual(true);
-			expect(result.current.canUndo).toEqual(false);
+			[historyState] = result.current;
+			expect(historyState.canRedo).toEqual(true);
+			expect(historyState.canUndo).toEqual(false);
 
 			expect(instance.get(['name'])).toEqual('');
 			expect(instance.get(['email'])).toEqual('');
@@ -96,12 +102,13 @@ describe('useFormHistory', () => {
 
 		// Redo
 		act(() => {
-			result.current.redo();
+			historyActions.redo();
 		});
 
 		await waitFor(() => {
-			expect(result.current.canRedo).toEqual(false);
-			expect(result.current.canUndo).toEqual(true);
+			[historyState] = result.current;
+			expect(historyState.canRedo).toEqual(false);
+			expect(historyState.canUndo).toEqual(true);
 
 			expect(instance.get(['name'])).toEqual('John Doe');
 			expect(instance.get(['email'])).toEqual('john@example.com');
@@ -123,19 +130,22 @@ describe('useFormHistory', () => {
 			instance.set(['name'], 'John');
 		});
 
+		let [historyState, historyActions] = result.current;
 		await waitFor(() => {
-			expect(result.current.canRedo).toEqual(false);
-			expect(result.current.canUndo).toEqual(true);
+			[historyState] = result.current;
+			expect(historyState.canRedo).toEqual(false);
+			expect(historyState.canUndo).toEqual(true);
 		});
 
 		// Clear history
 		act(() => {
-			result.current.clear();
+			historyActions.clear();
 		});
 
 		await waitFor(() => {
-			expect(result.current.canRedo).toEqual(false);
-			expect(result.current.canUndo).toEqual(false);
+			[historyState] = result.current;
+			expect(historyState.canRedo).toEqual(false);
+			expect(historyState.canUndo).toEqual(false);
 		});
 	});
 });
