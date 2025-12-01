@@ -35,7 +35,7 @@ namespace Form {
 		instance?: Instance;
 		implicit?: boolean;
 		locked?: boolean;
-		onChange?: (payload: Instance.Payload) => void;
+		onChange?: (payload: Instance.Payload, action: Instance.Action) => void;
 		onInit?: (payload: Instance.Payload) => void;
 		onSubmit?: (payload: Instance.Payload) => void;
 		submitOnEnter?: boolean;
@@ -126,7 +126,13 @@ const Form = ({
 
 	// Form change handler
 	const handleChange = useCallback(
-		(payload: Instance.Payload, options: { silent: boolean }) => {
+		(
+			payload: Instance.Payload,
+			options: {
+				action: Instance.Action;
+				silent: boolean;
+			}
+		) => {
 			// force context consumers to update
 			setContextState(state => {
 				return {
@@ -135,7 +141,7 @@ const Form = ({
 			});
 
 			if (!options.silent && isFunction(onChange)) {
-				onChange(payload);
+				onChange(payload, options.action);
 			}
 		},
 		[onChange]

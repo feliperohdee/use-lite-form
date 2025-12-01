@@ -33,6 +33,8 @@ const useFormHistory = (options: UseFormHistoryOptions = {}) => {
 		const unsubscribe = instance.onChange((payload, { action }) => {
 			if (action === 'HISTORY_REPLACE') {
 				// form was replaced using "HISTORY_REPLACE" and we need to replace the history state too
+				// we could call form.replace, trigering "REPLACE" event, but it would always replace history, and maybe this is not user intent
+				// se we have a custom action to replace the history
 				historyActions.replace(payload.value);
 			} else if (!action.startsWith('HISTORY_')) {
 				// Just commit changes to the history if they are not history-related
