@@ -117,13 +117,13 @@ describe('/form/instance', () => {
 		it('should trigger onChange when setting an error', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.setError(['user', 'name'], 'Required field');
-			expect(triggerSpy).toHaveBeenCalledWith({ action: 'SET_ERROR', silent: false });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'SET', silent: false });
 		});
 
 		it('should not trigger onChange when silent is true', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.setError(['user', 'name'], 'Required field', true);
-			expect(triggerSpy).toHaveBeenCalledWith({ action: 'SET_ERROR', silent: true });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'SET', silent: true });
 		});
 
 		it('should add to requiredErrors when requiredError is true', () => {
@@ -170,13 +170,13 @@ describe('/form/instance', () => {
 		it('should trigger onChange when unsetting an error', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.unsetError(['user', 'name']);
-			expect(triggerSpy).toHaveBeenCalledWith({ action: 'UNSET_ERROR', silent: false });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'SET', silent: false });
 		});
 
 		it('should not trigger onChange when silent is true', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.unsetError(['user', 'name'], true);
-			expect(triggerSpy).toHaveBeenCalledWith({ action: 'UNSET_ERROR', silent: true });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'SET', silent: true });
 		});
 
 		it('should return the updated errors', () => {
@@ -236,13 +236,13 @@ describe('/form/instance', () => {
 		it('should trigger onChange when patching', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.patch({ email: 'john@example.com' });
-			expect(triggerSpy).toHaveBeenCalledWith({ action: 'PATCH', silent: false });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'SET', silent: false });
 		});
 
 		it('should not trigger onChange when silent is true', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.patch({ email: 'john@example.com' }, true);
-			expect(triggerSpy).toHaveBeenCalledWith({ action: 'PATCH', silent: true });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'SET', silent: true });
 		});
 	});
 

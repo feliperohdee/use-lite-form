@@ -146,18 +146,7 @@ namespace Instance {
 		[key: string]: Errors | Error | Error[];
 	};
 
-	export type Action =
-		| 'CLEAR'
-		| 'CLEAR_ERRORS'
-		| 'INIT'
-		| 'PATCH'
-		| 'REPLACE'
-		| 'HISTORY_REDO'
-		| 'HISTORY_REPLACE'
-		| 'HISTORY_UNDO'
-		| 'SET_ERROR'
-		| 'SET'
-		| 'UNSET_ERROR';
+	export type Action = 'CLEAR' | 'CLEAR_ERRORS' | 'INIT' | 'REPLACE' | 'HISTORY_REDO' | 'HISTORY_REPLACE' | 'HISTORY_UNDO' | 'SET';
 	export type Payload<T extends object = Value, V = Nil> = {
 		changed: boolean;
 		changesCount: number;
@@ -383,7 +372,7 @@ class Instance<T extends object = Instance.Value> {
 			...this.value,
 			...value
 		};
-		this.triggerOnChange({ action: 'PATCH', silent });
+		this.triggerOnChange({ action: 'SET', silent });
 	}
 
 	registerItem(item: Instance.RegisteredItem): void {
@@ -430,7 +419,7 @@ class Instance<T extends object = Instance.Value> {
 			this.requiredErrors.add(path);
 		}
 
-		this.triggerOnChange({ action: 'SET_ERROR', silent });
+		this.triggerOnChange({ action: 'SET', silent });
 
 		return this.errors;
 	}
@@ -462,7 +451,7 @@ class Instance<T extends object = Instance.Value> {
 	unsetError(path: Instance.Path, silent: boolean = false): Instance.Errors {
 		this.errors = deepClean(set(cloneDeep(this.errors), path, null));
 		this.requiredErrors.remove(path);
-		this.triggerOnChange({ action: 'UNSET_ERROR', silent });
+		this.triggerOnChange({ action: 'SET', silent });
 
 		return this.errors;
 	}
