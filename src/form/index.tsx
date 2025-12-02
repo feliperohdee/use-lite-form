@@ -152,7 +152,7 @@ const Form = ({
 
 	// Listen to form changes
 	useEffect(() => {
-		const unsubscribe = instanceRef.current.onChange((payload, options) => {
+		const unsubscribe = instanceRef.current.onChange((payload, action) => {
 			// force context consumers to update
 			setState(state => {
 				return {
@@ -161,8 +161,8 @@ const Form = ({
 				};
 			});
 
-			if (!options.silent && isFunction(onChangeRef.current)) {
-				onChangeRef.current(payload, options.action);
+			if (isFunction(onChangeRef.current)) {
+				onChangeRef.current(payload, action);
 			}
 		});
 
@@ -174,7 +174,7 @@ const Form = ({
 
 	// Listen to form errors changes
 	useEffect(() => {
-		const unsubscribe = instanceRef.current.onErrorChange((payload, options) => {
+		const unsubscribe = instanceRef.current.onErrorChange((payload, action) => {
 			// force context consumers to update
 			setState(state => {
 				return {
@@ -183,8 +183,8 @@ const Form = ({
 				};
 			});
 
-			if (!options.silent && isFunction(onErrorChangeRef.current)) {
-				onErrorChangeRef.current(payload, options.action);
+			if (isFunction(onErrorChangeRef.current)) {
+				onErrorChangeRef.current?.(payload, action);
 			}
 		});
 

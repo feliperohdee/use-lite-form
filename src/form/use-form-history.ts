@@ -30,7 +30,7 @@ const useFormHistory = (options: UseFormHistoryOptions = {}) => {
 
 	// subscribe to form changes and commit them to the history
 	useEffect(() => {
-		const unsubscribe = instance.onChange((payload, { action }) => {
+		const unsubscribe = instance.onChange((payload, action) => {
 			if (action === 'HISTORY_REPLACE') {
 				// form was replaced using "HISTORY_REPLACE" and we need to replace the history state too
 				// we could call form.replace, trigering "REPLACE" event, but it would always replace history, and maybe this is not user intent

@@ -97,7 +97,8 @@ The main component that provides the form context.
 #### Props
 
 - `onSubmit`: Function called when the form is submitted
-- `onChange`: Function called when any form field changes
+- `onChange`: Function called when any form field changes (payload: Instance.Payload, action: Instance.Action)
+- `onErrorChange`: Function called when any form field error changes (payload: Instance.Payload, action: Instance.Action)
 - `value`: Initial form values
 - `form`: Custom form instance (advanced usage)
 - `locked`: Whether the form is locked for editing

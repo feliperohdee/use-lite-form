@@ -195,7 +195,7 @@ const Item = forwardRef(
 				effectRef.current(transformed);
 			}
 
-			instance.set(pathRef.current, transformed, false);
+			instance.set(pathRef.current, transformed);
 			setTimeout(() => {
 				userInputPendingReportRef.current = false;
 			}, resetDelay);
@@ -211,7 +211,7 @@ const Item = forwardRef(
 							forEach(requiredError, ({ path, error }) => {
 								if (isArray(path)) {
 									if (error) {
-										instance.setError(path, isString(error) ? error : 'Required Field.', false, true);
+										instance.setError(path, isString(error) ? error : 'Required Field.', true);
 									} else {
 										instance.unsetError(path);
 									}
@@ -220,18 +220,18 @@ const Item = forwardRef(
 							return;
 						} else if (isObject(requiredError) && isArray(requiredError.path)) {
 							if (requiredError.error) {
-								instance.setError(requiredError.path, isString(requiredError.error) ? requiredError.error : 'Required Field.', false, true);
+								instance.setError(requiredError.path, isString(requiredError.error) ? requiredError.error : 'Required Field.', true);
 							} else {
 								instance.unsetError(requiredError.path);
 							}
 							return;
 						}
 
-						instance.setError(pathRef.current, isString(requiredError) ? requiredError : 'Required Field.', false, true);
+						instance.setError(pathRef.current, isString(requiredError) ? requiredError : 'Required Field.', true);
 						return;
 					}
 				} else if (trimString(innerStateRef.current.value) === emptyValue) {
-					instance.setError(pathRef.current, 'Required Field.', false, true);
+					instance.setError(pathRef.current, 'Required Field.', true);
 					return;
 				}
 			}

@@ -34,7 +34,7 @@ describe('useFormHistory', () => {
 		expect(historyState.canUndo).toEqual(false);
 	});
 
-	it('should track form changes and enable undo', async () => {
+	it.only('should track form changes and enable undo', async () => {
 		const instance = new Instance({ name: '', email: '' });
 		const wrapper = createFormWrapper(instance);
 

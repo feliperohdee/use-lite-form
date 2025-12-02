@@ -1100,28 +1100,6 @@ describe('/form', () => {
 				'SET'
 			);
 		});
-
-		it('should NOT call onChange when silent is true', async () => {
-			const onChange = vi.fn();
-			const instance = new Form.Instance();
-
-			render(
-				<Form
-					instance={instance}
-					onChange={onChange}
-				>
-					<Form.Item path={['name']}>
-						<input type='text' />
-					</Form.Item>
-				</Form>
-			);
-
-			instance.set(['name'], 'test', true);
-
-			await wait(15);
-
-			expect(onChange).not.toHaveBeenCalled();
-		});
 	});
 
 	describe('onErrorChange', () => {
