@@ -317,7 +317,7 @@ const Item = forwardRef(
 			}
 		}, [instance, instance.lastChange]);
 
-		const handleChange = useCallback(
+		const onChange = useCallback(
 			(value: Instance.Value | React.ChangeEvent) => {
 				if (locked) {
 					return;
@@ -356,7 +356,7 @@ const Item = forwardRef(
 		const childrenProps = {
 			'data-error': state.error,
 			'data-id': idRef.current,
-			[onChangeProperty]: handleChange,
+			[onChangeProperty]: onChange,
 			[valueProperty]: file ? null : childTransformRef.current(state.value),
 			ref
 		};
@@ -364,7 +364,7 @@ const Item = forwardRef(
 		const itemFunctionProps: Item.ItemFunctionProps = {
 			error: state.error,
 			id: idRef.current,
-			onChange: handleChange,
+			onChange,
 			value: state.value
 		};
 

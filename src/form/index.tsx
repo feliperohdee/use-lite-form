@@ -14,6 +14,7 @@ import {
 	useCallback,
 	useContext,
 	useEffect,
+	useMemo,
 	useRef,
 	useState
 } from 'react';
@@ -36,6 +37,7 @@ namespace Form {
 		implicit?: boolean;
 		locked?: boolean;
 		onChange?: (payload: Instance.Payload, action: Instance.Action) => void;
+		onErrorChange?: (payload: Instance.Payload, action: Instance.Action) => void;
 		onInit?: (payload: Instance.Payload) => void;
 		onSubmit?: (payload: Instance.Payload) => void;
 		submitOnEnter?: boolean;
@@ -73,23 +75,30 @@ const Form = ({
 	implicit = false,
 	locked = false,
 	onChange,
+	onErrorChange,
 	onInit,
 	onSubmit,
 	ref,
 	submitOnEnter = false,
-	value: propValue,
+	value,
 	...rest
 }: Form.Props) => {
+	const onChangeRef = useRef<Form.Props['onChange']>(onChange);
+	const onErrorChangeRef = useRef<Form.Props['onErrorChange']>(onErrorChange);
+	const onInitRef = useRef<Form.Props['onInit']>(onInit);
+	const onSubmitRef = useRef<Form.Props['onSubmit']>(onSubmit);
 	const instanceRef = useRef<Instance>(null!);
+	const [state, setState] = useState({
+		changes: 0,
+		errors: 0
+	});
 
 	if (!instanceRef.current) {
-		const initialInstance = instance || new Instance(propValue || {});
+		instanceRef.current = instance || new Instance(value || {});
 
-		if (instance && !isUndefined(propValue)) {
-			instance.value = propValue;
+		if (instanceRef.current && !isUndefined(value)) {
+			instanceRef.current.value = value;
 		}
-
-		instanceRef.current = initialInstance;
 	}
 
 	const formRef = useRef<HTMLElement | null>(null);
@@ -107,85 +116,82 @@ const Form = ({
 		}
 	};
 
-	const [contextState, setContextState] = useState({
-		instance: instanceRef.current,
-		locked,
-		submit: (e: FormEvent<HTMLFormElement> | KeyboardEvent<HTMLElement>) => {
+	const submit = useCallback((e: FormEvent<HTMLFormElement> | KeyboardEvent<HTMLElement>) => {
+		if (e && isFunction(e.preventDefault)) {
 			e.preventDefault();
 		}
-	});
 
-	// Update context when locked prop changes
-	useEffect(() => {
-		setContextState(state => {
-			return {
-				...state,
-				locked
-			};
-		});
-	}, [locked]);
+		if (isFunction(onSubmitRef.current)) {
+			instanceRef.current.requestImmediateValue();
+			instanceRef.current.lastSubmit = now();
 
-	// Form change handler
-	const handleChange = useCallback(
-		(
-			payload: Instance.Payload,
-			options: {
-				action: Instance.Action;
-				silent: boolean;
+			onSubmitRef.current(instanceRef.current.getPayload());
+		}
+	}, []);
+
+	const emulateSubmit = useCallback(
+		(e: KeyboardEvent<HTMLElement>) => {
+			const enter = e.key === 'Enter';
+			const target = e.target as EventTarget & { nodeName?: string };
+
+			if (enter && target.nodeName === 'INPUT') {
+				submit(e);
 			}
-		) => {
+		},
+		[submit]
+	);
+
+	const contextValue = useMemo(() => {
+		return {
+			...state,
+			instance: instanceRef.current,
+			locked,
+			submit
+		};
+	}, [state, locked, submit]);
+
+	// Listen to form changes
+	useEffect(() => {
+		const unsubscribe = instanceRef.current.onChange((payload, options) => {
 			// force context consumers to update
-			setContextState(state => {
+			setState(state => {
 				return {
-					...state
+					...state,
+					changes: state.changes + 1
 				};
 			});
 
-			if (!options.silent && isFunction(onChange)) {
-				onChange(payload, options.action);
+			if (!options.silent && isFunction(onChangeRef.current)) {
+				onChangeRef.current(payload, options.action);
 			}
-		},
-		[onChange]
-	);
-
-	// Subscribe to form changes
-	useEffect(() => {
-		const unsubscribe = instanceRef.current.onChange(handleChange);
+		});
 
 		// Cleanup subscription on unmount
 		return () => {
-			if (isFunction(unsubscribe)) {
-				unsubscribe();
-			}
+			unsubscribe?.();
 		};
-	}, [handleChange]);
+	}, []);
 
-	// Handle form submission
-	const handleSubmit = useCallback(
-		(e: FormEvent<HTMLFormElement> | KeyboardEvent<HTMLElement>) => {
-			if (e && isFunction(e.preventDefault)) {
-				e.preventDefault();
-			}
-
-			if (isFunction(onSubmit)) {
-				instanceRef.current.requestImmediateValue();
-				instanceRef.current.lastSubmit = now();
-
-				onSubmit(instanceRef.current.getPayload());
-			}
-		},
-		[onSubmit]
-	);
-
-	// Update context when submit handler changes
+	// Listen to form errors changes
 	useEffect(() => {
-		setContextState(state => {
-			return {
-				...state,
-				submit: handleSubmit
-			};
+		const unsubscribe = instanceRef.current.onErrorChange((payload, options) => {
+			// force context consumers to update
+			setState(state => {
+				return {
+					...state,
+					errors: state.errors + 1
+				};
+			});
+
+			if (!options.silent && isFunction(onErrorChangeRef.current)) {
+				onErrorChangeRef.current(payload, options.action);
+			}
 		});
-	}, [handleSubmit]);
+
+		return () => {
+			unsubscribe?.();
+		};
+	}, []);
 
 	// Listen for custom form:submit event
 	useEffect(() => {
@@ -195,7 +201,7 @@ const Form = ({
 		init.current.listeningCustomEvent = true;
 
 		const onCustomSubmit = (e: CustomEvent) => {
-			handleSubmit(e as unknown as FormEvent<HTMLFormElement>);
+			submit(e as unknown as FormEvent<HTMLFormElement>);
 		};
 
 		if (formRef.current) {
@@ -207,35 +213,33 @@ const Form = ({
 				formRef.current.removeEventListener('form:submit', onCustomSubmit as EventListener);
 			}
 		};
-	}, [handleSubmit]);
+	}, [submit]);
 
-	// Handle form init
 	useEffect(() => {
-		if (isFunction(onInit)) {
-			onInit(instanceRef.current.getPayload());
+		if (isFunction(onInitRef.current)) {
+			onInitRef.current(instanceRef.current.getPayload());
 		}
-	}, []); // eslint-disable-line react-hooks/exhaustive-deps
+	}, []);
 
-	// Handle emulated submit (Enter key in input)
-	const handleEmulateSubmit = useCallback(
-		(e: KeyboardEvent<HTMLElement>) => {
-			const enter = e.key === 'Enter';
-			const target = e.target as EventTarget & { nodeName?: string };
+	useEffect(() => {
+		onChangeRef.current = onChange;
+	}, [onChange]);
 
-			if (enter && target.nodeName === 'INPUT') {
-				handleSubmit(e);
-			}
-		},
-		[handleSubmit]
-	);
+	useEffect(() => {
+		onErrorChangeRef.current = onErrorChange;
+	}, [onErrorChange]);
+
+	useEffect(() => {
+		onSubmitRef.current = onSubmit;
+	}, [onSubmit]);
 
 	const formChildren = util.renderChildren(children, null, {
 		...instanceRef.current.getPayload(),
-		submit: handleSubmit
+		submit
 	});
 
 	if (implicit) {
-		return <context.Provider value={contextState}>{formChildren}</context.Provider>;
+		return <context.Provider value={contextValue}>{formChildren}</context.Provider>;
 	}
 
 	const formProps: any = {
@@ -245,12 +249,12 @@ const Form = ({
 	};
 
 	if (as === 'form') {
-		formProps.onSubmit = handleSubmit;
+		formProps.onSubmit = submit;
 	} else if (submitOnEnter) {
-		formProps.onKeyDown = handleEmulateSubmit;
+		formProps.onKeyDown = emulateSubmit;
 	}
 
-	return <context.Provider value={contextState}>{createElement(as, formProps, formChildren)}</context.Provider>;
+	return <context.Provider value={contextValue}>{createElement(as, formProps, formChildren)}</context.Provider>;
 };
 
 const dispatchSubmit = (element: HTMLElement | null) => {

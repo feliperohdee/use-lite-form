@@ -117,13 +117,13 @@ describe('/form/instance', () => {
 		it('should trigger onChange when setting an error', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.setError(['user', 'name'], 'Required field');
-			expect(triggerSpy).toHaveBeenCalledWith({ action: 'SET', silent: false });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'SET_ERROR', silent: false });
 		});
 
 		it('should not trigger onChange when silent is true', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.setError(['user', 'name'], 'Required field', true);
-			expect(triggerSpy).toHaveBeenCalledWith({ action: 'SET', silent: true });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'SET_ERROR', silent: true });
 		});
 
 		it('should add to requiredErrors when requiredError is true', () => {
@@ -170,13 +170,13 @@ describe('/form/instance', () => {
 		it('should trigger onChange when unsetting an error', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.unsetError(['user', 'name']);
-			expect(triggerSpy).toHaveBeenCalledWith({ action: 'SET', silent: false });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'UNSET_ERROR', silent: false });
 		});
 
 		it('should not trigger onChange when silent is true', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.unsetError(['user', 'name'], true);
-			expect(triggerSpy).toHaveBeenCalledWith({ action: 'SET', silent: true });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'UNSET_ERROR', silent: true });
 		});
 
 		it('should return the updated errors', () => {
@@ -236,13 +236,13 @@ describe('/form/instance', () => {
 		it('should trigger onChange when patching', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.patch({ email: 'john@example.com' });
-			expect(triggerSpy).toHaveBeenCalledWith({ action: 'SET', silent: false });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'PATCH', silent: false });
 		});
 
 		it('should not trigger onChange when silent is true', () => {
 			const triggerSpy = vi.spyOn(instance, 'triggerOnChange');
 			instance.patch({ email: 'john@example.com' }, true);
-			expect(triggerSpy).toHaveBeenCalledWith({ action: 'SET', silent: true });
+			expect(triggerSpy).toHaveBeenCalledWith({ action: 'PATCH', silent: true });
 		});
 	});
 
@@ -398,6 +398,284 @@ describe('/form/instance', () => {
 			expect(() => {
 				instance.onChange('not a function' as any);
 			}).toThrow('listener must be a function.');
+		});
+
+		it('should NOT be called for error actions (SET_ERROR)', async () => {
+			const listener = vi.fn();
+			instance.onChange(listener);
+			instance.setError(['name'], 'Required field');
+
+			await wait(15);
+
+			expect(listener).not.toHaveBeenCalled();
+		});
+
+		it('should NOT be called for error actions (CLEAR_ERRORS)', async () => {
+			const listener = vi.fn();
+			instance.onChange(listener);
+			instance.clearErrors();
+
+			await wait(15);
+
+			expect(listener).not.toHaveBeenCalled();
+		});
+
+		it('should NOT be called for error actions (UNSET_ERROR)', async () => {
+			const listener = vi.fn();
+			instance.onChange(listener);
+			instance.errors = { name: 'Error' };
+			instance.unsetError(['name']);
+
+			await wait(15);
+
+			expect(listener).not.toHaveBeenCalled();
+		});
+
+		it('should be called for HISTORY_REDO action', async () => {
+			const listener = vi.fn();
+			instance.onChange(listener);
+			instance.historyAction('REDO', { name: 'test' });
+
+			await wait(15);
+
+			expect(listener).toHaveBeenCalledWith(
+				expect.objectContaining({
+					value: { name: 'test' }
+				}),
+				{ action: 'HISTORY_REDO', silent: false }
+			);
+		});
+
+		it('should be called for HISTORY_UNDO action', async () => {
+			const listener = vi.fn();
+			instance.onChange(listener);
+			instance.historyAction('UNDO', { name: 'test' });
+
+			await wait(15);
+
+			expect(listener).toHaveBeenCalledWith(
+				expect.objectContaining({
+					value: { name: 'test' }
+				}),
+				{ action: 'HISTORY_UNDO', silent: false }
+			);
+		});
+
+		it('should be called for HISTORY_REPLACE action', async () => {
+			const listener = vi.fn();
+			instance.onChange(listener);
+			instance.historyAction('REPLACE', { name: 'test' });
+
+			await wait(15);
+
+			expect(listener).toHaveBeenCalledWith(
+				expect.objectContaining({
+					value: { name: 'test' }
+				}),
+				{ action: 'HISTORY_REPLACE', silent: false }
+			);
+		});
+	});
+
+	describe('onErrorChange', () => {
+		it('should add listener to onErrorChangeListeners', async () => {
+			const listener = vi.fn();
+			instance.onErrorChange(listener);
+			instance.setError(['name'], 'Required field');
+
+			await wait(15);
+
+			expect(listener).toHaveBeenCalledWith(
+				{
+					changed: false,
+					changesCount: 0,
+					errors: { name: 'Required field' },
+					errorsCount: 1,
+					instance,
+					lastChange: expect.any(Number),
+					lastSubmit: 0,
+					requiredErrorsCount: 0,
+					value: {}
+				},
+				{ action: 'SET_ERROR', silent: false }
+			);
+		});
+
+		it('should be called for SET_ERROR action', async () => {
+			const listener = vi.fn();
+			instance.onErrorChange(listener);
+			instance.setError(['user', 'name'], 'Required field');
+
+			await wait(15);
+
+			expect(listener).toHaveBeenCalledTimes(1);
+			expect(listener).toHaveBeenCalledWith(
+				expect.objectContaining({
+					errors: { user: { name: 'Required field' } },
+					errorsCount: 1
+				}),
+				{ action: 'SET_ERROR', silent: false }
+			);
+		});
+
+		it('should be called for CLEAR_ERRORS action', async () => {
+			const listener = vi.fn();
+			instance.errors = { name: 'Error' };
+			instance.onErrorChange(listener);
+			instance.clearErrors();
+
+			await wait(15);
+
+			expect(listener).toHaveBeenCalledTimes(1);
+			expect(listener).toHaveBeenCalledWith(
+				expect.objectContaining({
+					errors: {},
+					errorsCount: 0
+				}),
+				{ action: 'CLEAR_ERRORS', silent: false }
+			);
+		});
+
+		it('should be called for UNSET_ERROR action', async () => {
+			const listener = vi.fn();
+			instance.errors = { name: 'Error', email: 'Email error' };
+			instance.onErrorChange(listener);
+			instance.unsetError(['name']);
+
+			await wait(15);
+
+			expect(listener).toHaveBeenCalledTimes(1);
+			expect(listener).toHaveBeenCalledWith(
+				expect.objectContaining({
+					errors: { email: 'Email error' },
+					errorsCount: 1
+				}),
+				{ action: 'UNSET_ERROR', silent: false }
+			);
+		});
+
+		it('should NOT be called for non-error actions (SET)', async () => {
+			const listener = vi.fn();
+			instance.onErrorChange(listener);
+			instance.set(['name'], 'test');
+
+			await wait(15);
+
+			expect(listener).not.toHaveBeenCalled();
+		});
+
+		it('should NOT be called for non-error actions (PATCH)', async () => {
+			const listener = vi.fn();
+			instance.onErrorChange(listener);
+			instance.patch({ name: 'test' });
+
+			await wait(15);
+
+			expect(listener).not.toHaveBeenCalled();
+		});
+
+		it('should NOT be called for non-error actions (REPLACE)', async () => {
+			const listener = vi.fn();
+			instance.onErrorChange(listener);
+			instance.replace({ name: 'test' });
+
+			await wait(15);
+
+			expect(listener).not.toHaveBeenCalled();
+		});
+
+		it('should NOT be called for non-error actions (CLEAR)', async () => {
+			const listener = vi.fn();
+			instance.onErrorChange(listener);
+			instance.clear();
+
+			await wait(15);
+
+			expect(listener).not.toHaveBeenCalled();
+		});
+
+		it('should NOT be called for non-error actions (INIT)', async () => {
+			const listener = vi.fn();
+			instance.onErrorChange(listener);
+			instance.init({ name: 'test' });
+
+			await wait(15);
+
+			expect(listener).not.toHaveBeenCalled();
+		});
+
+		it('should NOT be called for non-error actions (HISTORY_REDO)', async () => {
+			const listener = vi.fn();
+			instance.onErrorChange(listener);
+			instance.historyAction('REDO', { name: 'test' });
+
+			await wait(15);
+
+			expect(listener).not.toHaveBeenCalled();
+		});
+
+		it('should NOT be called for non-error actions (HISTORY_UNDO)', async () => {
+			const listener = vi.fn();
+			instance.onErrorChange(listener);
+			instance.historyAction('UNDO', { name: 'test' });
+
+			await wait(15);
+
+			expect(listener).not.toHaveBeenCalled();
+		});
+
+		it('should NOT be called for non-error actions (HISTORY_REPLACE)', async () => {
+			const listener = vi.fn();
+			instance.onErrorChange(listener);
+			instance.historyAction('REPLACE', { name: 'test' });
+
+			await wait(15);
+
+			expect(listener).not.toHaveBeenCalled();
+		});
+
+		it('should return unsubscribe function', async () => {
+			const listener = vi.fn();
+			const unsubscribe = instance.onErrorChange(listener);
+
+			unsubscribe();
+			instance.setError(['name'], 'Required field');
+
+			await wait(15);
+
+			expect(listener).not.toHaveBeenCalled();
+		});
+
+		it('should throw error if listener is not a function', () => {
+			expect(() => {
+				instance.onErrorChange('not a function' as any);
+			}).toThrow('listener must be a function.');
+		});
+
+		it('should respect silent flag', async () => {
+			const listener = vi.fn();
+			instance.onErrorChange(listener);
+
+			instance.setError(['name'], 'Required field', true);
+
+			await wait(15);
+
+			expect(listener).toHaveBeenCalledWith(expect.any(Object), { action: 'SET_ERROR', silent: true });
+		});
+
+		it('should handle multiple error change listeners', async () => {
+			const listener1 = vi.fn();
+			const listener2 = vi.fn();
+
+			instance.onErrorChange(listener1);
+			instance.onErrorChange(listener2);
+
+			instance.setError(['name'], 'Required field');
+
+			await wait(15);
+
+			expect(listener1).toHaveBeenCalledTimes(1);
+			expect(listener2).toHaveBeenCalledTimes(1);
 		});
 	});
 

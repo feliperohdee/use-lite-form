@@ -42,13 +42,13 @@ import Form from 'use-lite-form';
 const BasicForm = () => {
 	const [formResult, setFormResult] = useState(null);
 
-	const handleSubmit = payload => {
+	const submit = payload => {
 		setFormResult(payload.value);
 	};
 
 	return (
 		<div>
-			<Form onSubmit={handleSubmit}>
+			<Form onSubmit={submit}>
 				<div>
 					<label>Full Name</label>
 					<Form.Item

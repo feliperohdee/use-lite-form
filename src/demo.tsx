@@ -16,7 +16,7 @@ const BasicForm = () => {
 	const [formResult, setFormResult] = useState<any>(null);
 	const [lastSubmitTime, setLastSubmitTime] = useState<number | null>(null);
 
-	const handleSubmit = (payload: Form.Payload) => {
+	const submit = (payload: Form.Payload) => {
 		setFormResult(payload.value);
 		setLastSubmitTime(payload.lastSubmit);
 	};
@@ -26,7 +26,7 @@ const BasicForm = () => {
 			<h2>Basic Form</h2>
 			<p>A simple form with basic fields and validation.</p>
 
-			<Form onSubmit={handleSubmit}>
+			<Form onSubmit={submit}>
 				<div className='card'>
 					<h3>Personal Information</h3>
 
@@ -95,7 +95,7 @@ const BasicForm = () => {
 const ValidationForm = () => {
 	const [formResult, setFormResult] = useState<any>(null);
 
-	const handleSubmit = (payload: Form.Payload) => {
+	const submit = (payload: Form.Payload) => {
 		setFormResult({
 			errors: payload.errors,
 			errorsCount: payload.errorsCount,
@@ -129,7 +129,7 @@ const ValidationForm = () => {
 			<h2>Form Validation</h2>
 			<p>Demonstrates various validation techniques.</p>
 
-			<Form onSubmit={handleSubmit}>
+			<Form onSubmit={submit}>
 				<div className='card'>
 					<h3>Registration</h3>
 
@@ -215,7 +215,7 @@ const ValidationForm = () => {
 const DynamicForm = () => {
 	const [formResult, setFormResult] = useState<any>(null);
 
-	const handleSubmit = (payload: Form.Payload) => {
+	const submit = (payload: Form.Payload) => {
 		setFormResult(payload.value);
 	};
 
@@ -224,7 +224,7 @@ const DynamicForm = () => {
 			<h2>Dynamic Form</h2>
 			<p>This form demonstrates fields that change based on user selections.</p>
 
-			<Form onSubmit={handleSubmit}>
+			<Form onSubmit={submit}>
 				<div className='card'>
 					<h3>Contact Preferences</h3>
 
@@ -404,7 +404,7 @@ const DynamicForm = () => {
 const FormListExample = () => {
 	const [formResult, setFormResult] = useState<any>(null);
 
-	const handleSubmit = (payload: Form.Payload) => {
+	const submit = (payload: Form.Payload) => {
 		setFormResult(payload.value);
 	};
 
@@ -413,7 +413,7 @@ const FormListExample = () => {
 			<h2>Form List</h2>
 			<p>Dynamic form with ability to add, remove, and reorder items.</p>
 
-			<Form onSubmit={handleSubmit}>
+			<Form onSubmit={submit}>
 				<div className='card'>
 					<h3>Shopping List</h3>
 
@@ -516,7 +516,7 @@ const FormListExample = () => {
 const AdvancedForm = () => {
 	const [formResult, setFormResult] = useState<any>(null);
 
-	const handleSubmit = (payload: Form.Payload) => {
+	const submit = (payload: Form.Payload) => {
 		setFormResult(payload.value);
 	};
 
@@ -525,7 +525,7 @@ const AdvancedForm = () => {
 			<h2>Advanced Form</h2>
 			<p>Shows advanced features like transformations and complex validations.</p>
 
-			<Form onSubmit={handleSubmit}>
+			<Form onSubmit={submit}>
 				<div className='card'>
 					<h3>Profile Information</h3>
 
@@ -624,7 +624,7 @@ const AdvancedForm = () => {
 const FormHistoryDemo = () => {
 	const [formResult, setFormResult] = useState<any>(null);
 
-	const handleSubmit = (payload: Form.Payload) => {
+	const submit = (payload: Form.Payload) => {
 		setFormResult(payload.value);
 	};
 
@@ -633,7 +633,7 @@ const FormHistoryDemo = () => {
 			<h2>Form History (Undo/Redo)</h2>
 			<p>Demonstrates form state history with undo and redo functionality.</p>
 
-			<Form onSubmit={handleSubmit}>
+			<Form onSubmit={submit}>
 				{/* History Controls Component */}
 				<HistoryControls />
 
@@ -720,7 +720,7 @@ const FormHistoryDemo = () => {
 
 // History Controls Component that uses the useFormHistory hook
 const HistoryControls = () => {
-	const { canRedo, canUndo, clear, redo, undo } = Form.useFormHistory({
+	const [historyState, historyActions] = Form.useFormHistory({
 		maxCapacity: 10
 	});
 
@@ -732,8 +732,8 @@ const HistoryControls = () => {
 					<button
 						type='button'
 						className='button'
-						onClick={undo}
-						disabled={!canUndo}
+						onClick={historyActions.undo}
+						disabled={!historyState.canUndo}
 						title='Undo last change'
 					>
 						← Undo
@@ -741,8 +741,8 @@ const HistoryControls = () => {
 					<button
 						type='button'
 						className='button'
-						onClick={redo}
-						disabled={!canRedo}
+						onClick={historyActions.redo}
+						disabled={!historyState.canRedo}
 						title='Redo last undone change'
 					>
 						Redo →
@@ -750,14 +750,14 @@ const HistoryControls = () => {
 					<button
 						type='button'
 						className='button'
-						onClick={clear}
+						onClick={historyActions.initial}
 						title='Clear history'
 					>
 						Clear History
 					</button>
 				</div>
 				<div style={{ fontSize: '14px', color: '#666' }}>
-					Can undo: {canUndo ? 'Yes' : 'No'} | Can redo: {canRedo ? 'Yes' : 'No'}
+					Can undo: {historyState.canUndo ? 'Yes' : 'No'} | Can redo: {historyState.canRedo ? 'Yes' : 'No'}
 				</div>
 			</div>
 		</div>

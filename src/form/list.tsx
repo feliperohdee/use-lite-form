@@ -19,9 +19,9 @@ namespace List {
 		getId: (value: Instance.Value, key: number, index: number) => string;
 		getKey: (index: number) => number;
 		getNthValue: (index: number) => Instance.Value | null;
-		handleAdd: (value: Instance.Value, index?: number) => number;
-		handleRemove: (index: number) => void;
-		handleMove: (from: number, to: number) => void;
+		onAdd: (value: Instance.Value, index?: number) => number;
+		onRemove: (index: number) => void;
+		onMove: (from: number, to: number) => void;
 		items: Item[];
 		path: Instance.Path;
 		replace: (value: Instance.Value) => void;
@@ -79,9 +79,9 @@ const listContext = createContext<List.Context>({
 	getId: () => '',
 	getNthValue: () => null,
 	getKey: () => 0,
-	handleAdd: () => 0,
-	handleRemove: () => {},
-	handleMove: () => {},
+	onAdd: () => 0,
+	onRemove: () => {},
+	onMove: () => {},
 	items: [],
 	path: [],
 	replace: () => {},
@@ -134,7 +134,7 @@ const List = ({
 		return key;
 	}, []);
 
-	const handleAdd = useCallback(
+	const onAdd = useCallback(
 		(value: Instance.Value, index = -1) => {
 			if (!value) {
 				return 0;
@@ -159,7 +159,7 @@ const List = ({
 		[instance, path]
 	);
 
-	const handleMove = useCallback(
+	const onMove = useCallback(
 		(from: number, to: number) => {
 			if (from === to) {
 				return;
@@ -204,7 +204,7 @@ const List = ({
 		[instance, path]
 	);
 
-	const handleRemove = useCallback(
+	const onRemove = useCallback(
 		(index: number) => {
 			const items = instance.get(path, []) as Instance.Value[];
 
@@ -255,9 +255,9 @@ const List = ({
 		getId,
 		getKey,
 		getNthValue,
-		handleAdd,
-		handleRemove,
-		handleMove,
+		onAdd,
+		onRemove,
+		onMove,
 		items,
 		path,
 		replace,
@@ -272,7 +272,7 @@ const List = ({
 						return;
 					}
 
-					return handleAdd(value, index);
+					return onAdd(value, index);
 				},
 				canAdd,
 				getNthValue,
@@ -291,9 +291,9 @@ const ListItems = ({ children, filter: filterFn }: List.ItemProps) => {
 		getId,
 		getKey,
 		getNthValue,
-		handleAdd,
-		handleRemove,
-		handleMove,
+		onAdd,
+		onRemove,
+		onMove,
 		items,
 		path,
 		replace,
@@ -316,24 +316,24 @@ const ListItems = ({ children, filter: filterFn }: List.ItemProps) => {
 					return;
 				}
 
-				return handleAdd(value, index);
+				return onAdd(value, index);
 			},
 			addStart: (value: Instance.Value) => {
 				if (!canAdd) {
 					return;
 				}
 
-				return handleAdd(value, 0);
+				return onAdd(value, 0);
 			},
 			addAfter: (value: Instance.Value) => {
 				if (!canAdd) {
 					return;
 				}
 
-				return handleAdd(value, index + 1);
+				return onAdd(value, index + 1);
 			},
 			addBefore: (value: Instance.Value) => {
-				return handleAdd(value, index);
+				return onAdd(value, index);
 			},
 			canAdd,
 			canRemove,
@@ -341,7 +341,7 @@ const ListItems = ({ children, filter: filterFn }: List.ItemProps) => {
 				if (!canRemove) {
 					return;
 				}
-				return handleRemove(index);
+				return onRemove(index);
 			},
 			duplicate: (newValue?: Instance.Value | ((value: Instance.Value) => Instance.Value)) => {
 				if (!canAdd) {
@@ -356,7 +356,7 @@ const ListItems = ({ children, filter: filterFn }: List.ItemProps) => {
 					newValue = {};
 				}
 
-				return handleAdd({ ...value, ...newValue }, index + 1);
+				return onAdd({ ...value, ...newValue }, index + 1);
 			},
 			error: () => {
 				return instance.getError([...path, index]) as Instance.Error | Instance.Error[];
@@ -386,7 +386,7 @@ const ListItems = ({ children, filter: filterFn }: List.ItemProps) => {
 						nextIndex += 1;
 					}
 				}
-				return handleMove(index, nextIndex);
+				return onMove(index, nextIndex);
 			},
 			moveUp: () => {
 				if (first) {
@@ -407,7 +407,7 @@ const ListItems = ({ children, filter: filterFn }: List.ItemProps) => {
 					}
 				}
 
-				return handleMove(index, prevIndex);
+				return onMove(index, prevIndex);
 			},
 			path: [...path, index],
 			replace,
@@ -437,7 +437,7 @@ type ListAddProps = {
 
 const ListAdd = ({ children }: ListAddProps) => {
 	const { instance } = useContext(context);
-	const { canAdd, getNthValue, handleAdd, items, replace, size } = useContext(listContext);
+	const { canAdd, getNthValue, onAdd, items, replace, size } = useContext(listContext);
 
 	return util.renderChildren(children, {
 		add: (value: Instance.Value, index = -1) => {
@@ -445,7 +445,7 @@ const ListAdd = ({ children }: ListAddProps) => {
 				return;
 			}
 
-			return handleAdd(value, index);
+			return onAdd(value, index);
 		},
 		canAdd,
 		getNthValue,

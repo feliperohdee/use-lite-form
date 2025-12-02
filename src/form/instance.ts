@@ -146,7 +146,18 @@ namespace Instance {
 		[key: string]: Errors | Error | Error[];
 	};
 
-	export type Action = 'CLEAR' | 'CLEAR_ERRORS' | 'INIT' | 'REPLACE' | 'HISTORY_REDO' | 'HISTORY_REPLACE' | 'HISTORY_UNDO' | 'SET';
+	export type Action =
+		| 'CLEAR'
+		| 'CLEAR_ERRORS'
+		| 'INIT'
+		| 'PATCH'
+		| 'REPLACE'
+		| 'HISTORY_REDO'
+		| 'HISTORY_REPLACE'
+		| 'HISTORY_UNDO'
+		| 'SET_ERROR'
+		| 'SET'
+		| 'UNSET_ERROR';
 	export type Payload<T extends object = Value, V = Nil> = {
 		changed: boolean;
 		changesCount: number;
@@ -216,6 +227,7 @@ class Instance<T extends object = Instance.Value> {
 
 	private items: Set<Instance.RegisteredItem>;
 	private onChangeListeners: Set<Instance.Listener<T>>;
+	private onErrorChangeListeners: Set<Instance.Listener<T>>;
 
 	public changed: boolean;
 	public changesCount: number;
@@ -240,6 +252,7 @@ class Instance<T extends object = Instance.Value> {
 		this.lastChange = 0;
 		this.lastSubmit = 0;
 		this.onChangeListeners = new Set();
+		this.onErrorChangeListeners = new Set();
 		this.requiredErrors = new RequiredErrors();
 		this.value = value || ({} as T);
 	}
@@ -367,12 +380,24 @@ class Instance<T extends object = Instance.Value> {
 		};
 	}
 
+	onErrorChange(listener: Instance.Listener<T>): () => void {
+		if (!isFunction(listener)) {
+			throw new Error('listener must be a function.');
+		}
+
+		this.onErrorChangeListeners.add(listener);
+
+		return () => {
+			this.onErrorChangeListeners.delete(listener);
+		};
+	}
+
 	patch(value: Partial<T>, silent: boolean = false): void {
 		this.value = {
 			...this.value,
 			...value
 		};
-		this.triggerOnChange({ action: 'SET', silent });
+		this.triggerOnChange({ action: 'PATCH', silent });
 	}
 
 	registerItem(item: Instance.RegisteredItem): void {
@@ -419,7 +444,7 @@ class Instance<T extends object = Instance.Value> {
 			this.requiredErrors.add(path);
 		}
 
-		this.triggerOnChange({ action: 'SET', silent });
+		this.triggerOnChange({ action: 'SET_ERROR', silent });
 
 		return this.errors;
 	}
@@ -429,7 +454,16 @@ class Instance<T extends object = Instance.Value> {
 
 		this.lastChange = now();
 		this.cacheFlush();
-		this.triggerOnChangeDebounced({ action, silent });
+
+		if (action === 'CLEAR_ERRORS' || action === 'SET_ERROR' || action === 'UNSET_ERROR') {
+			const payload = this.getPayload();
+
+			this.onErrorChangeListeners.forEach(listener => {
+				listener(payload, { action, silent });
+			});
+		} else {
+			this.triggerOnChangeDebounced({ action, silent });
+		}
 	}
 
 	triggerOnChangeDebounced = debounce((args: { action: Instance.Action; silent?: boolean }) => {
@@ -451,7 +485,7 @@ class Instance<T extends object = Instance.Value> {
 	unsetError(path: Instance.Path, silent: boolean = false): Instance.Errors {
 		this.errors = deepClean(set(cloneDeep(this.errors), path, null));
 		this.requiredErrors.remove(path);
-		this.triggerOnChange({ action: 'SET', silent });
+		this.triggerOnChange({ action: 'UNSET_ERROR', silent });
 
 		return this.errors;
 	}

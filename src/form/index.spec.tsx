@@ -1070,4 +1070,87 @@ describe('/form', () => {
 			expect((screen.getByTestId('quantity-input') as HTMLInputElement).value).toBe('5');
 		});
 	});
+
+	describe('onChange', () => {
+		it('should call onChange when value is set', async () => {
+			const onChange = vi.fn();
+			const instance = new Form.Instance();
+
+			render(
+				<Form
+					instance={instance}
+					onChange={onChange}
+				>
+					<Form.Item path={['name']}>
+						<input type='text' />
+					</Form.Item>
+				</Form>
+			);
+
+			instance.set(['name'], 'test');
+
+			await wait(15);
+
+			expect(onChange).toHaveBeenCalledWith(
+				expect.objectContaining({
+					value: { name: 'test' },
+					changed: true,
+					changesCount: 1
+				}),
+				'SET'
+			);
+		});
+
+		it('should NOT call onChange when silent is true', async () => {
+			const onChange = vi.fn();
+			const instance = new Form.Instance();
+
+			render(
+				<Form
+					instance={instance}
+					onChange={onChange}
+				>
+					<Form.Item path={['name']}>
+						<input type='text' />
+					</Form.Item>
+				</Form>
+			);
+
+			instance.set(['name'], 'test', true);
+
+			await wait(15);
+
+			expect(onChange).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('onErrorChange', () => {
+		it('should call onErrorChange when error is set', async () => {
+			const onErrorChange = vi.fn();
+			const instance = new Form.Instance();
+
+			render(
+				<Form
+					instance={instance}
+					onErrorChange={onErrorChange}
+				>
+					<Form.Item path={['name']}>
+						<input type='text' />
+					</Form.Item>
+				</Form>
+			);
+
+			instance.setError(['name'], 'Required field');
+
+			await wait(15);
+
+			expect(onErrorChange).toHaveBeenCalledWith(
+				expect.objectContaining({
+					errors: { name: 'Required field' },
+					errorsCount: 1
+				}),
+				'SET_ERROR'
+			);
+		});
+	});
 });
