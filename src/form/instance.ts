@@ -167,7 +167,7 @@ namespace Instance {
 		lastChange: number;
 		lastSubmit: number;
 		requiredErrorsCount: number;
-		value: V extends Nil ? T : V;
+		value: V extends Nil ? T : V | null;
 	};
 
 	export type Nil = null | undefined;
