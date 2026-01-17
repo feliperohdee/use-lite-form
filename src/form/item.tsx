@@ -287,7 +287,7 @@ const Item = forwardRef(
 		useEffect(() => {
 			const error = instance.getError(pathRef.current);
 
-			// when user input is pending to report (means there are changes in the value), we just update the error
+			// when user input is pending to report (means there are changes in the value, not accept external value for the moment), we just update the error
 			if (userInputPendingReportRef.current) {
 				if (!isEqual(error, innerStateRef.current.error)) {
 					innerStateRef.current.error = error;
@@ -299,7 +299,7 @@ const Item = forwardRef(
 					});
 				}
 			} else {
-				// when user input is not pending to report, we update the error and value
+				// when user input is not pending to report, we update the error and value (accept external value)
 				const value = transformInRef.current();
 
 				if (!isEqual(error, innerStateRef.current.error) || !isEqual(value, innerStateRef.current.value)) {
